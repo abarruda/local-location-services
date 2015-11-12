@@ -58,7 +58,11 @@ class Host(Document):
             return False
 
     def identString(self):
-        return self._id + " / " + self.ip_address + " (" + self.vendor + ")"
+        if (self.name is None):
+            displayName = "<Unknown>"
+        else:
+            displayName = self.name
+        return self._id + " / " + self.ip_address + " (" + displayName + ", " + self.vendor + ")"
 
 #    def __init__(self, mac_address):
 #        self.mac_address = mac_address
