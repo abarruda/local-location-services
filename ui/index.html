@@ -1,0 +1,119 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Hosts</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.28.1/react-bootstrap.min.js"></script>
+	<script>
+  		var Alert = ReactBootstrap.Alert;
+	</script>
+  </head>
+  <body>
+    <div id="content"></div>
+    <script type="text/babel">
+    var Panel = ReactBootstrap.Panel;
+
+    var HostBox = React.createClass({
+
+    	render: function() {
+    		return (
+    			<div>
+    				<HostList title="Active Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_active_hosts" />
+    				<HostList title="Inactive Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_inactive_hosts" />
+    			</div>);
+    	}
+    });
+
+    var HostList = React.createClass({
+
+    	getInitialState: function() {
+    		return {data: []};
+    	},
+
+    	componentDidMount: function() {
+    		$.ajax({
+    			url: this.props.dataSourceUrl,
+    			dataType: 'jsonp',
+    			cache: false,
+    			success: function(data) {
+    				var hostList = [];
+    				$(data.rows).each(function(index, obj) {
+    					hostList.push({id: obj.id, name: obj.value.name, vendor: obj.value.vendor, status: obj.value.status, ip: obj.value.ip, firstSeen: obj.value.firstSeen, lastSeen: obj.value.lastSeen});
+    				});
+    				this.setState({data: hostList});
+    			}.bind(this),
+    			error: function(xhr, status, err) {
+    				debugger;
+    				console.error(this.props.dataSourceUrl, status, err.toString());
+    			}.bind(this)
+    		});
+    	},
+
+    	render: function() {
+    		var hosts = this.state.data.map(function(host) {
+    			var open = true;
+    			var style = "primary";
+    			if (host.status === "INACTIVE") {
+    				open = false;
+    				style = "info"
+    			}
+    			return (
+    				<Host host={host} open={open} style={style}/>
+    				);
+    		});
+    		return (
+    			<div className="hostList">
+    			<Panel header={this.props.title}>
+    				{hosts}
+    			</Panel>
+    			</div>
+    			);
+    	}
+    });
+
+    var Host = React.createClass({
+    	getInitialState: function() {
+    		return {open: this.props.open};
+    	},
+
+    	handleClick: function() {
+    		console.log(this.state.open);
+			this.setState({ open: !this.state.open });
+    	},
+
+    	render: function() {
+
+    		return (
+    			<div className="host">
+    				<Panel header={this.props.host.name} collapsible expanded={this.state.open} bsStyle={this.props.style}
+    				  onClick={this.handleClick}>
+	    				Vendor: {this.props.host.vendor}<br />
+	    				IP Address: {this.props.host.ip}<br />
+	    				Last Seen: {this.props.host.lastSeen}
+    				</Panel>
+    			</div>);
+    	}
+    });
+
+    ReactDOM.render(
+    	<HostBox />,
+    	document.getElementById('content')
+    	);
+    </script>
+  </body>
+</html>
