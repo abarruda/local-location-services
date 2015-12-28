@@ -32,9 +32,13 @@
 
     	render: function() {
     		return (
-    			<div>
-    				<HostList title="Active Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_active_hosts" />
-    				<HostList title="Inactive Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_inactive_hosts" />
+    			<div className="container-fluid">
+    				<div className="row">
+    					<div className="col-sm-4">
+    						<HostList title="Active Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_active_hosts" />
+    						<HostList title="Inactive Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_inactive_hosts" />
+    					</div>
+    				</div>
     			</div>);
     	}
     });
@@ -99,13 +103,14 @@
     	render: function() {
 
     		return (
-    			<div className="host">
-    				<Panel header={this.props.host.name} collapsible expanded={this.state.open} bsStyle={this.props.style}
-    				  onClick={this.handleClick}>
-	    				Vendor: {this.props.host.vendor}<br />
-	    				IP Address: {this.props.host.ip}<br />
-	    				Last Seen: {this.props.host.lastSeen}
-    				</Panel>
+    			<div>
+					<Panel header={this.props.host.name} collapsible expanded={this.state.open} 
+						bsStyle={this.props.style} onClick={this.handleClick}>
+						Vendor: {this.props.host.vendor}<br />
+						IP Address: {this.props.host.ip}<br />
+						First Seen: {this.props.host.firstSeen}<br />
+						Last Seen: {this.props.host.lastSeen}
+					</Panel>
     			</div>);
     	}
     });
