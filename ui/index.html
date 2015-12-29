@@ -27,6 +27,8 @@
     <div id="content"></div>
     <script type="text/babel">
     var Panel = ReactBootstrap.Panel;
+    var Row = ReactBootstrap.Row;
+    var POLL_INTERVAL = 30000;
 
     var HostBox = React.createClass({
 
@@ -35,21 +37,23 @@
     			<div className="container-fluid">
     				<div className="row">
     					<div className="col-sm-4">
-    						<HostList title="Active Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_active_hosts" />
-    						<HostList title="Inactive Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_inactive_hosts" />
+    						<HostList title="Active Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_active_hosts" pollInterval={POLL_INTERVAL}/>
+    						<HostList title="Inactive Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_inactive_hosts" pollInterval={POLL_INTERVAL}/>
     					</div>
     				</div>
-    			</div>);
+    			</div>
+    		);
     	}
     });
 
     var HostList = React.createClass({
 
     	getInitialState: function() {
-    		return {data: []};
+    		return {
+    			data: []};
     	},
 
-    	componentDidMount: function() {
+    	loadHostsFromServer: function() {
     		$.ajax({
     			url: this.props.dataSourceUrl,
     			dataType: 'jsonp',
@@ -68,23 +72,40 @@
     		});
     	},
 
+    	componentDidMount: function() {
+    		this.loadHostsFromServer();
+    		setInterval(this.loadHostsFromServer, this.props.pollInterval);
+    	},
+
+    	renderPanelTitle: function() {
+    		var count = $(this.state.data).length;
+    		return (
+    			<div>
+    				{this.props.title} <div className="badge">{count}</div>
+    			</div>
+    			);
+    	},
+
     	render: function() {
+
+    		var count = $(this.state.data).length;
+    		var panelTitle =  this.props.title + ' <span class="badge">' + count + '</span>';
+
     		var hosts = this.state.data.map(function(host) {
-    			var open = true;
     			var style = "primary";
     			if (host.status === "INACTIVE") {
-    				open = false;
     				style = "info"
     			}
     			return (
-    				<Host host={host} open={open} style={style}/>
+    				<Host host={host} style={style}/>
     				);
     		});
+
     		return (
     			<div className="hostList">
-    			<Panel header={this.props.title}>
-    				{hosts}
-    			</Panel>
+    				<Panel header={this.renderPanelTitle()}>
+    					{hosts}
+    				</Panel>
     			</div>
     			);
     	}
@@ -92,11 +113,10 @@
 
     var Host = React.createClass({
     	getInitialState: function() {
-    		return {open: this.props.open};
+    		return {open: false};
     	},
 
     	handleClick: function() {
-    		console.log(this.state.open);
 			this.setState({ open: !this.state.open });
     	},
 
