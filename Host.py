@@ -3,7 +3,7 @@
 
 from datetime import datetime
 from datetime import timedelta
-from couchdb.mapping import Document, TextField, DateTimeField, DictField
+from couchdb.mapping import Mapping, Document, TextField, DateTimeField, DictField
 
 class Host(Document):
     _id = TextField()
@@ -13,10 +13,14 @@ class Host(Document):
     status = TextField(default="ACTIVE")
     first_seen = DateTimeField(default=datetime.now)
     last_seen = DateTimeField(default=datetime.now)
+    #last_event = DictField(Mapping.build(status = TextField(), timestamp = DateTimeField()), default={'',''})
+    last_event = DictField(default={})
     ip_address_history = DictField()
     event_history = DictField()
 
     def update(self, ip_address, vendor):
+      # There is a slight discrepency with storing the datetime this way
+      # and using str(datetime.now())
       self.last_seen = datetime.now()
       self.ip_address = ip_address
       self.recordIp()
@@ -27,11 +31,24 @@ class Host(Document):
     def activate(self):
         print self.identString() + " has become ACTIVE"
         self.status = 'ACTIVE'
-        self.event_history[str(datetime.now())] = self.status
+	timestamp = datetime.now()
+        self.event_history[str(timestamp)] = self.status
+        self.recordLastEvent(self.status, str(timestamp))
 
     def inactivate(self):
         self.status = 'INACTIVE'
         self.event_history[str(self.last_seen)] = self.status
+        self.recordLastEvent(self.status, self.last_seen)
+
+    # The "last_event" field was added to the document structure after creation.
+    # Ran into problems inserting records into the dictionary if it didn't already exist,
+    # so I resorted to the code below to initialize the field and retain any data there 
+    # from previous updates.  Surely, there is a better solution than this.
+    def recordLastEvent(self, status, timestamp):
+        last_event_dict = dict()
+        last_event_dict.update({str(status): str(timestamp)})
+        last_event_dict.update(self.last_event)
+        self.last_event = last_event_dict
 
     def recordEvent(self, status):
         self.status = status
@@ -85,4 +102,6 @@ class Host(Document):
       jsonData['status'] = self.status
       jsonData['first_seen'] = self.first_seen
       jsonData['last_seen'] = self.last_seen
+      jsonData['last_event'] = self.last_event
+#      print "DEBUG: self.last_event: " + self.last_event
       return jsonData
