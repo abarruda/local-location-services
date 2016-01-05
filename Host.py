@@ -40,16 +40,8 @@ class Host(Document):
         self.event_history[str(self.last_seen)] = self.status
         self.recordLastEvent(self.status, self.last_seen)
 
-    # The "last_event" field was added to the document structure after creation.
-    # Ran into problems inserting records into the dictionary if it didn't already exist,
-    # so I resorted to the code below to initialize the field and retain any data there 
-    # from previous updates.  Surely, there is a better solution than this.
     def recordLastEvent(self, status, timestamp):
-	self.last_event = {'status': status, 'timestamp': timestamp}
-        #last_event_dict = dict()
-        #last_event_dict.update({str(status): str(timestamp)})
-        #last_event_dict.update(self.last_event)
-        #self.last_event = last_event_dict
+	self.last_event = {'status': status, 'timestamp': str(timestamp)}
 
     def recordEvent(self, status):
         self.status = status
