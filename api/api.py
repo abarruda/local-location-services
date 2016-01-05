@@ -39,15 +39,15 @@ def event_history(id, hours):
 	threshold = hours * 60 * 60
 	host = db[id]
 	event_history = host['event_history']
-	results_in_range = {}
-	for timestamp in event_history:
+	results_in_range = []
+	for timestamp in sorted(event_history):
 		# some timestamps include a decimal in the seconds position.
 		# strip that off to make time formatting easier
 		formatted_timestamp = timestamp[0:timestamp.rfind('.')]
 		event_time = datetime.strptime(formatted_timestamp, TIME_FORMAT)
 		total_seconds = (datetime.now() - event_time).total_seconds()
 		if (total_seconds <= threshold):
-			results_in_range[timestamp] = event_history[timestamp]
+			results_in_range.append({'timestamp': timestamp, 'status': event_history[timestamp]})
 
 	return jsonify(rows = results_in_range)
 
