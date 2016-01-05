@@ -22,12 +22,27 @@
 	<script>
   		var Alert = ReactBootstrap.Alert;
 	</script>
+	<style>
+		.modal-container {
+			position: relative;
+		}
+
+ 		.modal-container .modal, .modal-container .modal-backdrop {
+ 			position: absolute;
+ 		}
+ 
+	</style>
   </head>
   <body>
     <div id="content"></div>
     <script type="text/babel">
+
+
+    var Button = ReactBootstrap.Button;
+    var Modal = ReactBootstrap.Modal;
+    var OverlayTrigger = ReactBootstrap.OverlayTrigger;
     var Panel = ReactBootstrap.Panel;
-    var Row = ReactBootstrap.Row;
+    var Popover = ReactBootstrap.Popover;
     var POLL_INTERVAL = 30000;
 
     var HostBox = React.createClass({
@@ -37,8 +52,8 @@
     			<div className="container-fluid">
     				<div className="row">
     					<div className="col-sm-4">
-    						<HostList title="Active Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_active_hosts" pollInterval={POLL_INTERVAL}/>
-    						<HostList title="Inactive Hosts" dataSourceUrl="http://loyola.abarruda.com:5985/test_tracker/_design/tracker/_view/api_inactive_hosts" pollInterval={POLL_INTERVAL}/>
+    						<HostList title="Active Hosts" dataSourceUrl="http://loyola.abarruda.com:10101/tracker/api/v1/active" pollInterval={POLL_INTERVAL}/>
+    						<HostList title="Inactive Hosts" dataSourceUrl="http://loyola.abarruda.com:10101/tracker/api/v1/inactive" pollInterval={POLL_INTERVAL}/>
     					</div>
     				</div>
     			</div>
@@ -56,12 +71,14 @@
     	loadHostsFromServer: function() {
     		$.ajax({
     			url: this.props.dataSourceUrl,
-    			dataType: 'jsonp',
+    			// The following is needed when talking directly to couchDB.
+    			// Allowing cross domain on the Flask side, so no longer needed
+    			//dataType: 'jsonp',
     			cache: false,
     			success: function(data) {
     				var hostList = [];
     				$(data.rows).each(function(index, obj) {
-    					hostList.push({id: obj.id, name: obj.value.name, vendor: obj.value.vendor, status: obj.value.status, ip: obj.value.ip, firstSeen: obj.value.firstSeen, lastSeen: obj.value.lastSeen});
+    					hostList.push({id: obj.id, name: obj.value.name, vendor: obj.value.vendor, status: obj.value.status, ip: obj.value.ip, firstSeen: obj.value.firstSeen, lastSeen: obj.value.lastSeen, lastEvent: obj.value.lastEvent});
     				});
     				this.setState({data: hostList});
     			}.bind(this),
@@ -89,7 +106,6 @@
     	render: function() {
 
     		var count = $(this.state.data).length;
-    		var panelTitle =  this.props.title + ' <span class="badge">' + count + '</span>';
 
     		var hosts = this.state.data.map(function(host) {
     			var style = "primary";
@@ -97,14 +113,15 @@
     				style = "info"
     			}
     			return (
-    				<Host host={host} style={style}/>
+    				<Host key={host.id} host={host} style={style}/>
     				);
     		});
 
     		return (
     			<div className="hostList">
     				<Panel header={this.renderPanelTitle()}>
-    					{hosts}
+    						{hosts}
+    					
     				</Panel>
     			</div>
     			);
@@ -113,26 +130,138 @@
 
     var Host = React.createClass({
     	getInitialState: function() {
-    		return {open: false};
+    		return {
+    			open: false,
+    			showTimelineModal: false,
+    			timeline: []};
+    	},
+
+    	loadTimelineFromServer: function() {
+    		var apiUrl = "http://loyola.abarruda.com:10101/tracker/api/v1/" + this.props.host.id + "/event-history/36"
+
+    		$.ajax({
+    			url: apiUrl,
+    			cache: false,
+    			success: function(data) {
+    				var timeline = [];
+    				$(data.rows).each(function(index, obj) {
+    					timeline.push({timestamp: obj.timestamp, status: obj.status});
+    				});
+    				this.setState({timeline: timeline});
+    			}.bind(this),
+    			error: function(xhr, status, err) {
+    				debugger;
+    				console.error(this.props.dataSourceUrl, status, err.toString());
+    			}.bind(this)
+    		});
     	},
 
     	handleClick: function() {
 			this.setState({ open: !this.state.open });
     	},
 
-    	render: function() {
 
+    	handleTimelineClick: function() {
+    		this.loadTimelineFromServer();
+    		this.setState({showTimelineModal: true});
+    		this.setState({open: true});
+    	},
+
+    	handleTimelineClose: function () {
+    		this.setState({showTimelineModal: false});
+    	},
+
+    	renderTimelineModal: function() {
     		return (
-    			<div>
-					<Panel header={this.props.host.name} collapsible expanded={this.state.open} 
-						bsStyle={this.props.style} onClick={this.handleClick}>
+    			<Modal show={this.state.showTimelineModal} onHide={this.close}>
+    			</Modal>
+    			);
+    	},
+
+    	renderPanelTitle: function() {
+    		return (
+    			<div onClick={this.handleClick}>THIS IS A TITLE</div>
+    			);
+    	},
+
+    	render: function() {
+    		var noLastEvent = (typeof this.props.host.lastEvent === "undefined");
+
+    		var lastEvent;
+    		if (!noLastEvent) {
+    			if (typeof this.props.host.lastEvent.status === "undefined") {
+    				lastEvent = "N/A";
+    			} else {
+    				lastEvent = "became " + this.props.host.lastEvent.status + " at " +  this.props.host.lastEvent.timestamp;
+    			}
+    			
+    		}
+    		return (
+    			<div className="modal-container">
+					<Panel header={this.props.host.name} collapsible bsStyle={this.props.style}>
 						Vendor: {this.props.host.vendor}<br />
 						IP Address: {this.props.host.ip}<br />
 						First Seen: {this.props.host.firstSeen}<br />
-						Last Seen: {this.props.host.lastSeen}
+						
+						<hr />
+						Last Event: {lastEvent}<br />
+						Last Seen: {this.props.host.lastSeen}<br />
+						<Button bsStyle="link" onClick={this.handleTimelineClick}>Show Timeline</Button><br />
 					</Panel>
+
+    				<TimelineModal showTimelineModal={this.state.showTimelineModal} onHide={this.handleTimelineClose} 
+    					host={this.props.host} timeline={this.state.timeline} container={this}>
+    				</TimelineModal>
+
     			</div>);
     	}
+    });
+
+    var TimelineModal = React.createClass({
+
+    	getInitialState: function() {
+    		return {
+    			timeline: []
+    			};
+    	},
+
+    	render: function() {
+
+    		var timeline = this.props.timeline.map(function(timeline) {
+    			var statusLabelClassName = "label";
+    			var statusGlyphClassName = "glyphicon";
+
+    			if (timeline.status === "ACTIVE") {
+    				statusLabelClassName += " label-primary"
+    				statusGlyphClassName += " glyphicon-chevron-right";
+    			} else {
+    				statusLabelClassName += " label-info"
+    				statusGlyphClassName += " glyphicon-chevron-left";
+    			}
+
+    			return(
+    					<div>
+    						<div className={statusGlyphClassName}></div>
+    						<div className="glyphicon glyphicon-user" />
+    						<div className={statusLabelClassName}>{timeline.status}</div>
+		    				<div className="label label-default">{timeline.timestamp}</div>
+		    				<br />
+	    				</div>
+    				);
+    		});
+
+    		return (
+    			<Modal bsSize="small" show={this.props.showTimelineModal} onHide={this.props.onHide} container={this.props.container}>
+    				<Modal.Header closeButton>
+    					<Modal.Title>{this.props.host.name} Activity<br /><small>(past 36 hours)</small></Modal.Title>
+    				</Modal.Header>
+    				<Modal.Body>
+    					{timeline}
+    				</Modal.Body>
+    			</Modal>
+    			);
+    	}
+
     });
 
     ReactDOM.render(
