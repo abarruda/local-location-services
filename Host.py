@@ -45,10 +45,11 @@ class Host(Document):
     # so I resorted to the code below to initialize the field and retain any data there 
     # from previous updates.  Surely, there is a better solution than this.
     def recordLastEvent(self, status, timestamp):
-        last_event_dict = dict()
-        last_event_dict.update({str(status): str(timestamp)})
-        last_event_dict.update(self.last_event)
-        self.last_event = last_event_dict
+	self.last_event = {'status': status, 'timestamp': timestamp}
+        #last_event_dict = dict()
+        #last_event_dict.update({str(status): str(timestamp)})
+        #last_event_dict.update(self.last_event)
+        #self.last_event = last_event_dict
 
     def recordEvent(self, status):
         self.status = status
