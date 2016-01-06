@@ -1,4 +1,4 @@
-# Class represents an Host that has connected to
+# Class represents a Host that has connected to
 # the network that is being tracked
 
 from datetime import datetime
@@ -11,27 +11,26 @@ class Host(Document):
     vendor = TextField()
     name = TextField()
     status = TextField(default="ACTIVE")
-    first_seen = DateTimeField(default=datetime.now)
-    last_seen = DateTimeField(default=datetime.now)
+    first_seen = DateTimeField()
+    last_seen = DateTimeField()
     #last_event = DictField(Mapping.build(status = TextField(), timestamp = DateTimeField()), default={'',''})
     last_event = DictField(default={})
     ip_address_history = DictField()
     event_history = DictField()
 
-    def update(self, ip_address, vendor):
+    def update(self, timestamp, ip_address, vendor):
       # There is a slight discrepency with storing the datetime this way
       # and using str(datetime.now())
-      self.last_seen = datetime.now()
+      self.last_seen = timestamp
       self.ip_address = ip_address
       self.recordIp()
 
       if self.status == 'INACTIVE':
           self.activate()
 
-    def activate(self):
+    def activate(self, timestamp):
         print self.identString() + " has become ACTIVE"
         self.status = 'ACTIVE'
-	timestamp = datetime.now()
         self.event_history[str(timestamp)] = self.status
         self.recordLastEvent(self.status, str(timestamp))
 
@@ -41,11 +40,7 @@ class Host(Document):
         self.recordLastEvent(self.status, self.last_seen)
 
     def recordLastEvent(self, status, timestamp):
-	self.last_event = {'status': status, 'timestamp': str(timestamp)}
-
-    def recordEvent(self, status):
-        self.status = status
-        self.event_history[str(datetime.now())] = status
+        self.last_event = {'status': status, 'timestamp': str(timestamp)}
 
     def recordIp(self):
         if self.ip_address in self.ip_address_history:
@@ -54,15 +49,14 @@ class Host(Document):
         else:
             self.ip_address_history[str(self.ip_address)] = 1
 
-    def isInactivateWithIdleTime(self, minutes):
+    def isInactivateWithIdleTime(self, timestamp, minutes):
         # if host is past the idle threshold, mark INACTIVE
-        idleTimeSeconds = (datetime.now()-self.last_seen).total_seconds()
+        idleTimeSeconds = (timestamp-self.last_seen).total_seconds()
         if (self.status == 'ACTIVE' and idleTimeSeconds > (minutes*60)):
             idleMinutes, idleSeconds = divmod(idleTimeSeconds, 60)
             print(self.identString() + " has gone INACTIVE (" + \
                  str(idleMinutes) + " minutes, " + \
                  str(idleSeconds) + " seconds)")
-            #self.recordEvent('INACTIVE')
             return True
         else:
             return False

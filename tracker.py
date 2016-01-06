@@ -42,17 +42,20 @@ while True:
   try:
     # perform network scan
     detectedHosts = scanNetwork("192.168.1.2-99")
+    # establish a timestamp that will be used for all updates for this scan
+    scanTimestamp = datetime.now()
 
     # update existing tracked hosts last_seen or insert new record for each new host
     for key, host in detectedHosts.items():
       hostRecord = host.load(db, key)
 
       if hostRecord is not None:
-        hostRecord.update(host.ip_address, host.vendor) 
+        hostRecord.update(scanTimestamp, host.ip_address, host.vendor) 
         hostRecord.store(db)
       else:
         print("Tracking hew host: " + host.identString())
-        host.activate()
+        host.first_seen = timestamp
+        host.activate(scanTimestamp)
         host.recordIp()
         host.store(db)
 
@@ -61,18 +64,18 @@ while True:
     # TODO: maintain a list of ids above and remove them from the list
     # we're about to iterate over
     for id in db:
-      trackedHost = Host.load(db, id)
+      if id[0] != "_": # ignore design document ("_design/tracker")
+        trackedHost = Host.load(db, id)
 
-      # determine if the host is INACTIVE and update
-      if trackedHost.isInactivateWithIdleTime(HOST_IDLE_THRESHOLD_MINUTES):
-        trackedHost.inactivate()
-        trackedHost.store(db)
+        # determine if the host is INACTIVE and update
+        if trackedHost.isInactivateWithIdleTime(scanTimestamp, HOST_IDLE_THRESHOLD_MINUTES):
+          trackedHost.inactivate()
+          trackedHost.store(db)
 
     # compact DB to remove revisions we don't need
     db.compact()
   except:
-    print "Unexpected error:", sys.exc_info()[0]
+    print "Unexpected error:", sys.exc_info()
 
   sys.stdout.flush()
-  #print ""
   sleep(SCAN_HEARTBEAT_SECONDS)
