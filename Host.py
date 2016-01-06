@@ -26,7 +26,7 @@ class Host(Document):
       self.recordIp()
 
       if self.status == 'INACTIVE':
-          self.activate()
+          self.activate(timestamp)
 
     def activate(self, timestamp):
         print self.identString() + " has become ACTIVE"
