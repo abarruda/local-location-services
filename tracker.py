@@ -54,7 +54,8 @@ while True:
         hostRecord.store(db)
       else:
         print("Tracking hew host: " + host.identString())
-        host.first_seen = timestamp
+        host.first_seen = scanTimestamp
+        host.last_seen = scanTimestamp
         host.activate(scanTimestamp)
         host.recordIp()
         host.store(db)
