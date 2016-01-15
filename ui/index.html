@@ -32,10 +32,14 @@
         }
  
     </style>
+    <meta name="viewport" content="maximum-scale=1, width=device-width, initial-scale=1">
   </head>
   <body>
     <div id="content"></div>
     <script type="text/babel">
+
+    var baseUrl = "http://tracker-api.abarruda.com:10101";
+    //var baseUrl = "http://loyola.abarruda.com:10101/"
 
 
     var Button = ReactBootstrap.Button;
@@ -51,8 +55,8 @@
                 <div className="container-fluid">
                     <div className="row">
                         <div className="col-sm-4">
-                            <HostList title="Active Hosts" dataSourceUrl="http://loyola.abarruda.com:10101/tracker/api/v1/active" pollInterval={POLL_INTERVAL}/>
-                            <HostList title="Inactive Hosts" dataSourceUrl="http://loyola.abarruda.com:10101/tracker/api/v1/inactive" pollInterval={POLL_INTERVAL}/>
+                            <HostList title="Active Hosts" dataSourceUrl={baseUrl + "/tracker/api/v1/active"} pollInterval={POLL_INTERVAL}/>
+                            <HostList title="Inactive Hosts" dataSourceUrl={baseUrl + "/tracker/api/v1/inactive"} pollInterval={POLL_INTERVAL}/>
                         </div>
                     </div>
                 </div>
@@ -137,7 +141,7 @@
         },
 
         loadTimelineFromServer: function() {
-            var apiUrl = "http://loyola.abarruda.com:10101/tracker/api/v1/" + this.props.host.id + "/event-history/36"
+            var apiUrl = baseUrl + "/tracker/api/v1/" + this.props.host.id + "/event-history/36"
 
             $.ajax({
                 url: apiUrl,
