@@ -38,11 +38,13 @@
     <div id="content"></div>
     <script type="text/babel">
 
-    var baseUrl = "http://tracker-api.abarruda.com:10101";
-    //var baseUrl = "http://loyola.abarruda.com:10101/"
+    //var baseUrl = "http://tracker-api.abarruda.com:10101";
+    var baseUrl = "http://loyola.abarruda.com:10101"
 
 
     var Button = ReactBootstrap.Button;
+    var Input = ReactBootstrap.Input;
+    var Modal = ReactBootstrap.Modal;
     var OverlayTrigger = ReactBootstrap.OverlayTrigger;
     var Panel = ReactBootstrap.Panel;
     var Popover = ReactBootstrap.Popover;
@@ -52,7 +54,7 @@
 
         render: function() {
             return (
-                <div className="container-fluid">
+                <div className="container-fluid" ref="parentContainer">
                     <div className="row">
                         <div className="col-sm-4">
                             <HostList title="Active Hosts" dataSourceUrl={baseUrl + "/tracker/api/v1/active"} pollInterval={POLL_INTERVAL}/>
@@ -136,12 +138,12 @@
             return {
                 open: false,
                 timelineExpanded: false,
-                showTimelineModal: false,
+                updateModalVisible: false,
                 timeline: []};
         },
 
         loadTimelineFromServer: function() {
-            var apiUrl = baseUrl + "/tracker/api/v1/" + this.props.host.id + "/event-history/36"
+            var apiUrl = baseUrl + "/tracker/api/v1/" + this.props.host.id + "/event-history/36";
 
             $.ajax({
                 url: apiUrl,
@@ -164,7 +166,6 @@
             this.setState({ open: !this.state.open });
         },
 
-
         handleTimelineClick: function() {
             if (this.state.timelineExpanded === false) {
                 // This means we're switch from a closed state to an open state,
@@ -174,8 +175,12 @@
             this.setState({timelineExpanded: !this.state.timelineExpanded})
         },
 
-        handleTimelineClose: function () {
-            this.setState({showTimelineModal: false});
+        handleUpdateModalClick: function() {
+            this.setState({updateModalVisible: !this.state.updateModalVisible});
+        },
+
+        handleUpdateModalClose: function() {
+            this.setState({updateModalVisible: false});
         },
 
         render: function() {
@@ -191,16 +196,21 @@
                 
             }
             return (
-                <div>
+                <div className="modal-container">
+                    <UpdateHostModal
+                        visible={this.state.updateModalVisible} 
+                        onClose={this.handleUpdateModalClose} 
+                        host={this.props.host}/>
                     <Panel header={this.props.host.name} collapsible bsStyle={this.props.style}>
+                        {lastEvent}<br />
+                        <br />
                         Vendor: {this.props.host.vendor}<br />
                         IP Address: {this.props.host.ip}<br />
                         First Seen: {this.props.host.firstSeen}<br />
                         Last Seen: {this.props.host.lastSeen}<br />
                         <br />
-                        {lastEvent}<br />
-                        <br />
-                        
+                        Actions: <br />
+                        <Button bsStyle="link" onClick={this.handleUpdateModalClick}>Edit Host</Button><br />
                         <Button bsStyle="link" onClick={this.handleTimelineClick}>Show Timeline</Button><small>(past 36 hours)</small>
                         <TimelinePanel key={this.props.host.id} expanded={this.state.timelineExpanded} 
                             host={this.props.host} timeline={this.state.timeline} />
@@ -246,6 +256,61 @@
                     {timeline}
                 </Panel>
                 );
+        }
+    });
+
+    var UpdateHostModal = React.createClass({
+
+        getInitialState: function() {
+            return {nameValue: ''};
+        },
+
+        handleNameChange: function() {
+            this.setState({nameValue: this.refs.hostNameInput.getValue()});
+        },
+
+        updateHost: function () {
+            var apiUrl = baseUrl + "/tracker/api/v1/" + this.props.host.id;
+
+            $.ajax({
+                url: apiUrl,
+                cache: false,
+                type: 'POST',
+                data: {name: this.state.nameValue},
+                success: function(data) {
+                    alert("The update was successful.  The data will refreshed shortly.");
+                    this.props.onClose();
+                }.bind(this),
+                error: function(xhr, status, err) {
+                    console.error(this.props.dataSourceUrl, status, err.toString());
+                    alert("UNABLE TO UPDATE!  Try again or check logs.");
+                }.bind(this)
+            });
+        },
+
+        render: function() {
+
+            return(
+                <Modal show={this.props.visible} onHide={this.props.onClose} container={this.refs.parentContainer} bsSize="small">
+                    <Modal.Header closeButton>
+                        <Modal.Title>Modify {this.props.host.name}</Modal.Title>
+                    </Modal.Header>
+                    
+                    <Modal.Body>
+                        <Input type="text"
+                            label="Host's name:"
+                            placeholder={this.props.host.name}
+                            value={this.state.nameValue}
+                            ref="hostNameInput"
+                            onChange={this.handleNameChange} />
+                    </Modal.Body>
+
+                    <Modal.Footer>
+                        <Button onClick={this.updateHost}>Save</Button>
+                    </Modal.Footer>
+                </Modal>
+            );
+
         }
     });
 
