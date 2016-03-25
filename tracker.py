@@ -4,13 +4,19 @@ from time import sleep
 from libnmap.process import NmapProcess
 from libnmap.parser import NmapParser
 from Host import Host
+from Event import Event
 import couchdb
 from couchdb import ResourceNotFound
 
 couchdb_url = 'http://localhost:5984/'
 couchdb_name = 'test_tracker'
+historical_db_name = 'tracker_historical'
 HOST_IDLE_THRESHOLD_MINUTES = 15
 SCAN_HEARTBEAT_SECONDS = 30
+
+couch = couchdb.Server(couchdb_url)
+db = couch[couchdb_name]
+historical_db = couch[historical_db_name]
 
 def scanNetwork(networkRange):
   print str(datetime.now()) + " - Scanning network for hosts..."
@@ -35,8 +41,11 @@ def scanNetwork(networkRange):
   else:
     print(nm.stderr)
 
-couch = couchdb.Server(couchdb_url)
-db = couch[couchdb_name]
+
+def recordEvent(timestamp, hostId, status):
+  newEvent = Event(timestamp=timestamp, host_id=hostId, status=status)
+  newEvent.store(historical_db)
+
 
 while True:
   try:
@@ -50,8 +59,12 @@ while True:
       hostRecord = host.load(db, key)
 
       if hostRecord is not None:
+        if hostRecord.status == 'INACTIVE':
+          recordEvent(scanTimestamp, key, 'ACTIVE')
+
         hostRecord.update(scanTimestamp, host.ip_address, host.vendor) 
         hostRecord.store(db)
+        
       else:
         print("Tracking hew host: " + host.identString())
         host.first_seen = scanTimestamp
@@ -59,6 +72,7 @@ while True:
         host.activate(scanTimestamp)
         host.recordIp()
         host.store(db)
+        recordEvent(scanTimestamp, key, 'ACTIVE')
 
 
     # iterate over all currently tracked hosts
@@ -72,6 +86,7 @@ while True:
         if trackedHost.isInactivateWithIdleTime(scanTimestamp, HOST_IDLE_THRESHOLD_MINUTES):
           trackedHost.inactivate()
           trackedHost.store(db)
+          recordEvent(scanTimestamp, id, 'INACTIVE')
 
     # compact DB to remove revisions we don't need
     db.compact()
