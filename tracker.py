@@ -85,7 +85,8 @@ while True:
         if trackedHost.isInactivateWithIdleTime(scanTimestamp, HOST_IDLE_THRESHOLD_MINUTES):
           trackedHost.inactivate()
           trackedHost.store(db)
-          recordEvent(scanTimestamp, id, 'INACTIVE')
+          # use the last seen timestamp when going INACTIVE
+          recordEvent(trackedHost.last_seen, id, 'INACTIVE')
 
     # compact DB to remove revisions we don't need
     db.compact()
