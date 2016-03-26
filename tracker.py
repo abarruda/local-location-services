@@ -74,7 +74,6 @@ while True:
         host.store(db)
         recordEvent(scanTimestamp, key, 'ACTIVE')
 
-
     # iterate over all currently tracked hosts
     # TODO: maintain a list of ids above and remove them from the list
     # we're about to iterate over

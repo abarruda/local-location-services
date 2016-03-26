@@ -8,14 +8,17 @@ import couchdb
 master_couchdb_url = 'http://loyola.abarruda.com:5985/'
 replica_couchdb_url = 'http://localhost:5984/'
 trackerdb = 'test_tracker'
+tracker_historical_db = 'tracker_historical'
 
 replica_couch = couchdb.Server(replica_couchdb_url)
 replica_db = replica_couch[trackerdb]
+replica_historical_db = replica_couch[tracker_historical_db]
 master_couch = couchdb.Server(master_couchdb_url)
 master_db = master_couch[trackerdb]
 
 
-TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+TIME_FORMAT_V1 = '%Y-%m-%d %H:%M:%S'
+TIME_FORMAT_V2 = '%Y-%m-%dT%H:%M:%SZ'
 
 app = Flask(__name__)
 
@@ -51,10 +54,28 @@ def event_history(id, hours):
 		# some timestamps include a decimal in the seconds position.
 		# strip that off to make time formatting easier
 		formatted_timestamp = timestamp[0:timestamp.rfind('.')]
-		event_time = datetime.strptime(formatted_timestamp, TIME_FORMAT)
+		event_time = datetime.strptime(formatted_timestamp, TIME_FORMAT_V1)
 		total_seconds = (datetime.now() - event_time).total_seconds()
 		if (total_seconds <= threshold):
 			results_in_range.append({'timestamp': timestamp, 'status': event_history[timestamp]})
+
+	return jsonify(rows = results_in_range)
+
+@app.route('/tracker/api/v2/<id>/event-history/<int:hours>', methods=['GET'])
+@crossdomain(origin='*')
+def event_history_from_tracker_historical_db(id, hours):
+	threshold = hours * 60 * 60
+	results_in_range = []
+	view_results = replica_historical_db.view('tracker/search_by_id_sort_by_timestamp', key=[id])
+	for result in view_results:
+		timestamp = result.value['timestamp']
+		status = result.value['status']
+
+		event_time = datetime.strptime(timestamp, TIME_FORMAT_V2)
+		print(event_time)
+		total_seconds = (datetime.now() - event_time).total_seconds()
+		if (total_seconds <= threshold):
+			results_in_range.append({'timestamp': timestamp, 'status': status})
 
 	return jsonify(rows = results_in_range)
 

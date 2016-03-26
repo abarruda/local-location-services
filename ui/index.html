@@ -143,7 +143,7 @@
         },
 
         loadTimelineFromServer: function() {
-            var apiUrl = baseUrl + "/tracker/api/v1/" + this.props.host.id + "/event-history/36";
+            var apiUrl = baseUrl + "/tracker/api/v2/" + this.props.host.id + "/event-history/36";
 
             $.ajax({
                 url: apiUrl,
