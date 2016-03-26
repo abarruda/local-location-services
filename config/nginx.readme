@@ -1,0 +1,3 @@
+nginx configuration file should be copied and renamed to:
+
+/etc/nginx/sites-enabled/default
