@@ -6,6 +6,10 @@ from datetime import timedelta
 from couchdb.mapping import Mapping, Document, TextField, DateTimeField, DictField
 
 class Host(Document):
+
+    STATUS_ACTIVE = 'ACTIVE'
+    STATUS_INACTIVE = 'INACTIVE'
+
     _id = TextField()
     ip_address = TextField()
     vendor = TextField()
@@ -25,17 +29,17 @@ class Host(Document):
       self.ip_address = ip_address
       self.recordIp()
 
-      if self.status == 'INACTIVE':
+      if self.isInactive():
           self.activate(timestamp)
 
     def activate(self, timestamp):
         print self.identString() + " has become ACTIVE"
-        self.status = 'ACTIVE'
+        self.status = self.STATUS_ACTIVE
         self.event_history[str(timestamp)] = self.status
         self.recordLastEvent(self.status, str(timestamp))
 
     def inactivate(self):
-        self.status = 'INACTIVE'
+        self.status = self.STATUS_INACTIVE
         self.event_history[str(self.last_seen)] = self.status
         self.recordLastEvent(self.status, self.last_seen)
 
@@ -49,10 +53,21 @@ class Host(Document):
         else:
             self.ip_address_history[str(self.ip_address)] = 1
 
+    def isActive(self):
+      return self.status == self.STATUS_ACTIVE
+
+    def isInactive(self):
+      return self.status == self.STATUS_INACTIVE
+
+    def isIdleFor(self, minutes):
+      if (datetime.now() - self.last_seen).total_seconds() > (minutes * 60):
+        return True
+      return False
+
     def isInactivateWithIdleTime(self, timestamp, minutes):
         # if host is past the idle threshold, mark INACTIVE
         idleTimeSeconds = (timestamp-self.last_seen).total_seconds()
-        if (self.status == 'ACTIVE' and idleTimeSeconds > (minutes*60)):
+        if (self.isActive() and idleTimeSeconds > (minutes*60)):
             idleMinutes, idleSeconds = divmod(idleTimeSeconds, 60)
             print(self.identString() + " has gone INACTIVE (" + \
                  str(idleMinutes) + " minutes, " + \

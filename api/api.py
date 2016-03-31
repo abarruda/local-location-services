@@ -72,7 +72,6 @@ def event_history_from_tracker_historical_db(id, hours):
 		status = result.value['status']
 
 		event_time = datetime.strptime(timestamp, TIME_FORMAT_V2)
-		print(event_time)
 		total_seconds = (datetime.now() - event_time).total_seconds()
 		if (total_seconds <= threshold):
 			results_in_range.append({'timestamp': timestamp, 'status': status})

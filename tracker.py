@@ -1,48 +1,25 @@
 import sys
 from datetime import datetime
 from time import sleep
-from libnmap.process import NmapProcess
-from libnmap.parser import NmapParser
-from Host import Host
-from Event import Event
 import couchdb
 from couchdb import ResourceNotFound
+from Host import Host
+from Event import Event
+from scanutils import ScanUtils
 
 couchdb_url = 'http://localhost:5984/'
 couchdb_name = 'test_tracker'
 historical_db_name = 'tracker_historical'
 HOST_IDLE_THRESHOLD_MINUTES = 15
 SCAN_HEARTBEAT_SECONDS = 30
+HOST_IDLE_FOR_PING_MINUTES = 5
 
 couch = couchdb.Server(couchdb_url)
 db = couch[couchdb_name]
 historical_db = couch[historical_db_name]
 
-def scanNetwork(networkRange):
-  print str(datetime.now()) + " - Scanning network for hosts..."
-  nm = NmapProcess(targets=networkRange, options="-sP -n")
-  nm.run()
-
-  if nm.rc == 0:
-    nmap_report = NmapParser.parse(nm.stdout)
-
-    numHosts = 0
-    detectedHosts = {}
-    for host in nmap_report.hosts:
-      if host.is_up():
-        seen = datetime.now()
-        detectedHost = Host(_id=host.mac, ip_address=host.ipv4, vendor=host.vendor)
-        detectedHosts[detectedHost._id] = detectedHost
-        numHosts += 1
-    print "Number of hosts detected: " + str(numHosts)
-    print ""
-    return detectedHosts
-
-  else:
-    print(nm.stderr)
-
-
 def recordEvent(timestamp, hostId, status):
+  print "**** Recording event: " + str(timestamp) + " " + str(hostId) + " " + str(status)
   newEvent = Event(timestamp=timestamp, host_id=hostId, status=status)
   newEvent.store(historical_db)
 
@@ -50,17 +27,16 @@ def recordEvent(timestamp, hostId, status):
 while True:
   try:
     # perform network scan
-    detectedHosts = scanNetwork("192.168.1.2-99")
+    detectedHosts = ScanUtils.scanNetwork("192.168.1.2-99")
     # establish a timestamp that will be used for all updates for this scan
     scanTimestamp = datetime.now()
-
     # update existing tracked hosts last_seen or insert new record for each new host
     for key, host in detectedHosts.items():
       hostRecord = host.load(db, key)
 
       if hostRecord is not None:
-        if hostRecord.status == 'INACTIVE':
-          recordEvent(scanTimestamp, key, 'ACTIVE')
+        if hostRecord.isInactive():
+          recordEvent(scanTimestamp, key, Host.STATUS_ACTIVE)
 
         hostRecord.update(scanTimestamp, host.ip_address, host.vendor) 
         hostRecord.store(db)
@@ -72,24 +48,34 @@ while True:
         host.activate(scanTimestamp)
         host.recordIp()
         host.store(db)
-        recordEvent(scanTimestamp, key, 'ACTIVE')
+        recordEvent(scanTimestamp, key, Host.STATUS_ACTIVE)
 
     # iterate over all currently tracked hosts
-    # TODO: maintain a list of ids above and remove them from the list
-    # we're about to iterate over
     for id in db:
-      if id[0] != "_": # ignore design document ("_design/tracker")
+      # ignore design documents ("_design/tracker") and hosts we just detected
+      if (id[0] != "_") and (id not in detectedHosts):
         trackedHost = Host.load(db, id)
+
+        # if the host is ACTIVE, then it didn't come up in the nmap scan
+        # perform a ping with last known IP.
+        if trackedHost.isActive() and trackedHost.isIdleFor(HOST_IDLE_FOR_PING_MINUTES):
+          response, message, pingTime = ScanUtils.pingAnVerifyMacAddress(trackedHost.ip_address, trackedHost._id)
+          print trackedHost.identString() + " " + message + " (ping time: " + str(pingTime) + ")"
+          if response:
+            trackedHost.update(scanTimestamp, trackedHost.ip_address, trackedHost.vendor)
+            continue
 
         # determine if the host is INACTIVE and update
         if trackedHost.isInactivateWithIdleTime(scanTimestamp, HOST_IDLE_THRESHOLD_MINUTES):
           trackedHost.inactivate()
           trackedHost.store(db)
           # use the last seen timestamp when going INACTIVE
-          recordEvent(trackedHost.last_seen, id, 'INACTIVE')
+          recordEvent(trackedHost.last_seen, id, Host.STATUS_INACTIVE)
 
     # compact DB to remove revisions we don't need
     db.compact()
+    print ""
+    print ""
   except:
     print "Unexpected error:", sys.exc_info()
 
