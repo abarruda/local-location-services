@@ -19,6 +19,7 @@ master_db = master_couch[trackerdb]
 
 TIME_FORMAT_V1 = '%Y-%m-%d %H:%M:%S'
 TIME_FORMAT_V2 = '%Y-%m-%dT%H:%M:%SZ'
+PRETTY_TIME_FORMAT = '%m/%d/%Y - %H:%M:%S'
 
 app = Flask(__name__)
 
@@ -64,17 +65,12 @@ def event_history(id, hours):
 @app.route('/tracker/api/v2/<id>/event-history/<int:hours>', methods=['GET'])
 @crossdomain(origin='*')
 def event_history_from_tracker_historical_db(id, hours):
-	threshold = hours * 60 * 60
+	threshold = str(datetime.now() - timedelta(hours = hours))
 	results_in_range = []
-	view_results = replica_historical_db.view('tracker/search_by_id_sort_by_timestamp', key=[id])
+	view_results = replica_historical_db.view('tracker/search_by_id_sort_by_timestamp', startkey=[id, threshold], endkey=[id, {}])
 	for result in view_results:
-		timestamp = result.value['timestamp']
-		status = result.value['status']
-
-		event_time = datetime.strptime(timestamp, TIME_FORMAT_V2)
-		total_seconds = (datetime.now() - event_time).total_seconds()
-		if (total_seconds <= threshold):
-			results_in_range.append({'timestamp': timestamp, 'status': status})
+		pretty_timestamp = datetime.strptime(result.value['timestamp'], TIME_FORMAT_V2).strftime(PRETTY_TIME_FORMAT)
+		results_in_range.append({'timestamp': pretty_timestamp, 'status': result.value['status']})
 
 	return jsonify(rows = results_in_range)
 
