@@ -18,12 +18,10 @@ class ScanUtils(object):
 
 	  if nm.rc == 0:
 	    nmap_report = NmapParser.parse(nm.stdout)
-	    #print str(nm.stdout)
 
 	    numHosts = 0
 	    detectedHosts = {}
 	    for host in nmap_report.hosts:
-	      #print str(host)
 	      if host.is_up():
 	        seen = datetime.now()
 	        detectedHost = Host(_id=host.mac, ip_address=host.ipv4, vendor=host.vendor)

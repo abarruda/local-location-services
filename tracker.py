@@ -5,7 +5,7 @@ import couchdb
 from couchdb import ResourceNotFound
 from Host import Host
 from Event import Event
-from scanutils import ScanUtils
+from ScanUtils import ScanUtils
 
 couchdb_url = 'http://localhost:5984/'
 couchdb_name = 'test_tracker'
@@ -63,6 +63,7 @@ while True:
           print trackedHost.identString() + " " + message + " (ping time: " + str(pingTime) + ")"
           if response:
             trackedHost.update(scanTimestamp, trackedHost.ip_address, trackedHost.vendor)
+            trackedHost.store(db)
             continue
 
         # determine if the host is INACTIVE and update
