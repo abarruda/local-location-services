@@ -9,7 +9,12 @@ from Host import Host
 
 class ScanUtils(object):
 
-    @staticmethod   
+    # Scans for hosts in the specified network range using nmap.
+    # Nmap does not to do a port scan after host discovery. This is often known as a "ping scan"
+    # and is by default one step more intrusive than the list scan, and can often be used for 
+    # the same purposes. It allows light reconnaissance of a target network without attracting much
+    # attention.
+    @staticmethod
     def scanNetwork(networkRange):
         scanStart = datetime.now()
         print str(scanStart) + " - Scanning network for hosts..."
@@ -29,13 +34,17 @@ class ScanUtils(object):
                     detectedHosts[detectedHost._id] = detectedHost
                     numHosts += 1
         else:
-            print(nm.stderr)
+            print("Nmap scan error: " + str(nm.stderr))
 
         scanTime = datetime.now() - scanStart
         print "Number of hosts detected: " + str(numHosts) + " (scan time: " + str(scanTime) + ")"
         return detectedHosts
 
 
+    # Performs an ICMP ping on the specified IP address.  If the ping is successful (0 return code),
+    # the ARP table is checked to determine if the mac address that responded to the ping matches 
+    # the specified mac address.  If so, the ping is considered successful, resulting in an active, 
+    # known host.
     @staticmethod
     def pingAnVerifyMacAddress(ip, mac):
         result = False

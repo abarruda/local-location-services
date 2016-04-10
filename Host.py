@@ -32,20 +32,24 @@ class Host(Document):
       if self.isInactive():
           self.activate(timestamp)
 
+    # Marks a host as ACTIVE and records the event.
     def activate(self, timestamp):
         print self.identString() + " has become ACTIVE"
         self.status = self.STATUS_ACTIVE
         self.event_history[str(timestamp)] = self.status
         self.recordLastEvent(self.status, str(timestamp))
 
+    # Marks a host as INACTIVE and records the event
     def inactivate(self):
         self.status = self.STATUS_INACTIVE
         self.event_history[str(self.last_seen)] = self.status
         self.recordLastEvent(self.status, self.last_seen)
 
+    # Records an event
     def recordLastEvent(self, status, timestamp):
         self.last_event = {'status': status, 'timestamp': str(timestamp)}
 
+    # Increments and records the IP address count in the host record
     def recordIp(self):
         if self.ip_address in self.ip_address_history:
             currentValue = self.ip_address_history[str(self.ip_address)]
@@ -59,15 +63,18 @@ class Host(Document):
     def isInactive(self):
       return self.status == self.STATUS_INACTIVE
 
-    def isIdleFor(self, minutes):
-      if (datetime.now() - self.last_seen).total_seconds() > (minutes * 60):
+    # Determines if the host has not been seen for greater than the specified 
+    # amount of minutes.
+    @staticmethod
+    def isIdleFor(host, timestamp, minutes):
+      if (timestamp - host.last_seen).total_seconds() > (minutes * 60):
         return True
       return False
 
-    def isInactivateWithIdleTime(self, timestamp, minutes):
+    def isInactiveWithIdleTime(self, timestamp, minutes):
         # if host is past the idle threshold, mark INACTIVE
         idleTimeSeconds = (timestamp-self.last_seen).total_seconds()
-        if (self.isActive() and idleTimeSeconds > (minutes*60)):
+        if (self.isActive() and self.isIdleFor(self, timestamp, minutes)):
             idleMinutes, idleSeconds = divmod(idleTimeSeconds, 60)
             print(self.identString() + " has gone INACTIVE (" + \
                  str(idleMinutes) + " minutes, " + \
@@ -83,20 +90,6 @@ class Host(Document):
             displayName = self.name
         return self._id + " / " + self.ip_address + " (" + displayName + ", " + self.vendor + ")"
 
-#    def __init__(self, mac_address):
-#        self.mac_address = mac_address
-#        self.ip_address = None
-#        self.status = "ACTIVE"
-#        self.first_seen = None
-#        self.last_seen = None
-#        self.ip_address_history = []
-#        self.event_history = []
-
-#    def printInfo(self):
-#      print "IP: " + ip_address
-#      print "MAC: " + mac_address
-#      print ""
-
     def json(self):
       jsonData = {}
       jsonData['_id'] = self.mac_address
@@ -105,5 +98,4 @@ class Host(Document):
       jsonData['first_seen'] = self.first_seen
       jsonData['last_seen'] = self.last_seen
       jsonData['last_event'] = self.last_event
-#      print "DEBUG: self.last_event: " + self.last_event
       return jsonData

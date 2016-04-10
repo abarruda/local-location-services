@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import sleep
 import couchdb
 from couchdb import ResourceNotFound
@@ -25,7 +25,7 @@ def recordEvent(timestamp, hostId, status):
 
 
 while True:
-  try:
+#  try:
     # perform network scan
     detectedHosts = ScanUtils.scanNetwork("192.168.1.2-99")
     # establish a timestamp that will be used for all updates for this scan
@@ -58,7 +58,7 @@ while True:
 
         # if the host is ACTIVE, then it didn't come up in the nmap scan
         # perform a ping with last known IP.
-        if trackedHost.isActive() and trackedHost.isIdleFor(HOST_IDLE_FOR_PING_MINUTES):
+        if trackedHost.isActive() and Host.isIdleFor(trackedHost, scanTimestamp, HOST_IDLE_FOR_PING_MINUTES):
           response, message, pingTime = ScanUtils.pingAnVerifyMacAddress(trackedHost.ip_address, trackedHost._id)
           print trackedHost.identString() + " " + message + " (ping time: " + str(pingTime) + ")"
           if response:
@@ -67,18 +67,30 @@ while True:
             continue
 
         # determine if the host is INACTIVE and update
-        if trackedHost.isInactivateWithIdleTime(scanTimestamp, HOST_IDLE_THRESHOLD_MINUTES):
+        if trackedHost.isInactiveWithIdleTime(scanTimestamp, HOST_IDLE_THRESHOLD_MINUTES):
           trackedHost.inactivate()
           trackedHost.store(db)
-          # use the last seen timestamp when going INACTIVE
-          recordEvent(trackedHost.last_seen, id, Host.STATUS_INACTIVE)
+          # use the last seen timestamp when going INACTIVE, unless the timestamp
+          # was also the timestamp for the last event (occurs when the host is 
+          # detected only during one cycle), in which case add a second
+          TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+          lastEventTime = datetime.strptime(trackedHost.last_event['timestamp'], TIME_FORMAT)
+          print "last event: " + str(trackedHost.last_event['timestamp'])
+          print lastEventTime
+          print "last_seen: " + str(trackedHost.last_seen)
+          if lastEventTime == trackedHost.last_seen:
+            print "Host detected for one cycle, adding 1 second."
+            eventTime = trackedHost.last_seen + timedelta(seconds = 1)
+          else: 
+            eventTime = trackedHost.last_seen
+          recordEvent(eventTime, id, Host.STATUS_INACTIVE)
 
     # compact DB to remove revisions we don't need
     db.compact()
     print ""
     print ""
-  except:
-    print "Unexpected error:", sys.exc_info()
+#  except:
+#    print "Unexpected error:", sys.exc_info()
 
-  sys.stdout.flush()
-  sleep(SCAN_HEARTBEAT_SECONDS)
+    sys.stdout.flush()
+    sleep(SCAN_HEARTBEAT_SECONDS)
