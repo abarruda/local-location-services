@@ -2,7 +2,7 @@ Mostly taken from https://github.com/coryhouse/react-flux-starter-kit
 
 Installation Instructions: 
 
-Install NodeJS
+Install NodeJS (https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
 Download this repo
 Open the command line of your choice and cd to the root directory of this repo on your machine
 npm install - Installs packages
