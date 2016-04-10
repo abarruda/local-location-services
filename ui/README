@@ -1,0 +1,19 @@
+Mostly taken from https://github.com/coryhouse/react-flux-starter-kit
+
+Installation Instructions: 
+
+Install NodeJS
+Download this repo
+Open the command line of your choice and cd to the root directory of this repo on your machine
+npm install - Installs packages
+npm install -g gulp - Installs gulp globally. Why globally?
+gulp - Builds the project and opens your browser.
+Navigate to http://localhost:8080/ if your browser doesn't open automatically.
+
+
+To Deploy:
+
+npm install - to install any updated or added packages
+gulp - build the project (bundle.js)
+
+UI now exists in the dist folder.
