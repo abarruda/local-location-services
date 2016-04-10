@@ -25,7 +25,7 @@ def recordEvent(timestamp, hostId, status):
 
 
 while True:
-#  try:
+  try:
     # perform network scan
     detectedHosts = ScanUtils.scanNetwork("192.168.1.2-99")
     # establish a timestamp that will be used for all updates for this scan
@@ -75,9 +75,6 @@ while True:
           # detected only during one cycle), in which case add a second
           TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
           lastEventTime = datetime.strptime(trackedHost.last_event['timestamp'], TIME_FORMAT)
-          print "last event: " + str(trackedHost.last_event['timestamp'])
-          print lastEventTime
-          print "last_seen: " + str(trackedHost.last_seen)
           if lastEventTime == trackedHost.last_seen:
             print "Host detected for one cycle, adding 1 second."
             eventTime = trackedHost.last_seen + timedelta(seconds = 1)
@@ -89,8 +86,8 @@ while True:
     db.compact()
     print ""
     print ""
-#  except:
-#    print "Unexpected error:", sys.exc_info()
+  except:
+    print "Unexpected error:", sys.exc_info()
 
-    sys.stdout.flush()
-    sleep(SCAN_HEARTBEAT_SECONDS)
+  sys.stdout.flush()
+  sleep(SCAN_HEARTBEAT_SECONDS)
