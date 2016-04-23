@@ -36,13 +36,11 @@ class Host(Document):
     def activate(self, timestamp):
         print self.identString() + " has become ACTIVE"
         self.status = self.STATUS_ACTIVE
-        self.event_history[str(timestamp)] = self.status
         self.recordLastEvent(self.status, str(timestamp))
 
     # Marks a host as INACTIVE and records the event
     def inactivate(self):
         self.status = self.STATUS_INACTIVE
-        self.event_history[str(self.last_seen)] = self.status
         self.recordLastEvent(self.status, self.last_seen)
 
     # Records an event
