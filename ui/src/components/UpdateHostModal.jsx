@@ -1,4 +1,5 @@
 "use strict";
+var $ = require('jquery');
 var React = require('react');
 var Button = require('react-bootstrap').Button;
 var Input = require('react-bootstrap').Input;

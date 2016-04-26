@@ -7,5 +7,5 @@ from api import app
 http_server = HTTPServer(WSGIContainer(app))
 http_server.listen(10101)
 enable_pretty_logging()
-print "API starting..."
+print "A-Net Tracker API started."
 IOLoop.instance().start()
