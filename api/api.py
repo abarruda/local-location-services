@@ -23,12 +23,6 @@ TIME_FORMAT_V2 = '%Y-%m-%dT%H:%M:%SZ'
 PRETTY_TIME_FORMAT = '%m/%d/%Y - %H:%M:%S'
 COMPACTION_INTERVAL = 21600 #6 hours
 
-def periodicCompaction():
-	print "Performing periodic compaction."
-	replica_db.compact()
-	replica_historical_db.compact()
-	threading.Timer(COMPACTION_INTERVAL, periodicCompaction).start()
-
 app = Flask(__name__)
 PeriodicCompaction(replica_db, COMPACTION_INTERVAL).start()
 PeriodicCompaction(replica_historical_db, COMPACTION_INTERVAL).start()
