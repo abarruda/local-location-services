@@ -2,26 +2,36 @@ from flask import Flask, jsonify, request
 from api_utils import crossdomain
 from datetime import datetime, timedelta
 import couchdb
+from periodic_tasks import PeriodicCompaction
 
 # Utilize replica for fast processing of views,
 # but edits to the data must go to the master
 master_couchdb_url = 'http://loyola.abarruda.com:5985/'
 replica_couchdb_url = 'http://localhost:5984/'
-trackerdb = 'test_tracker'
+master_tracker_db = 'test_tracker'
+master_replica_db = 'tracker'
 tracker_historical_db = 'tracker_historical'
 
 replica_couch = couchdb.Server(replica_couchdb_url)
-replica_db = replica_couch[trackerdb]
+replica_db = replica_couch[master_replica_db]
 replica_historical_db = replica_couch[tracker_historical_db]
 master_couch = couchdb.Server(master_couchdb_url)
-master_db = master_couch[trackerdb]
-
+master_db = master_couch[master_tracker_db]
 
 TIME_FORMAT_V1 = '%Y-%m-%d %H:%M:%S'
 TIME_FORMAT_V2 = '%Y-%m-%dT%H:%M:%SZ'
 PRETTY_TIME_FORMAT = '%m/%d/%Y - %H:%M:%S'
+COMPACTION_INTERVAL = 21600 #6 hours
+
+def periodicCompaction():
+	print "Performing periodic compaction."
+	replica_db.compact()
+	replica_historical_db.compact()
+	threading.Timer(COMPACTION_INTERVAL, periodicCompaction).start()
 
 app = Flask(__name__)
+PeriodicCompaction(replica_db, COMPACTION_INTERVAL).start()
+PeriodicCompaction(replica_historical_db, COMPACTION_INTERVAL).start()
 
 @app.route('/')
 def index():
