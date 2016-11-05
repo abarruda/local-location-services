@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from api_utils import crossdomain
 from datetime import datetime, timedelta
 import couchdb
-from periodic_tasks import PeriodicCompaction
+from periodic_tasks import PeriodicCompaction, PeriodicViewCall
 
 # Utilize replica for fast processing of views,
 # but edits to the data must go to the master
@@ -22,10 +22,12 @@ TIME_FORMAT_V1 = '%Y-%m-%d %H:%M:%S'
 TIME_FORMAT_V2 = '%Y-%m-%dT%H:%M:%SZ'
 PRETTY_TIME_FORMAT = '%m/%d/%Y - %H:%M:%S'
 COMPACTION_INTERVAL = 21600 #6 hours
+VIEW_CALL_INTERVAL = 86400 #24 hours
 
 app = Flask(__name__)
-PeriodicCompaction(replica_db, COMPACTION_INTERVAL).start()
-PeriodicCompaction(replica_historical_db, COMPACTION_INTERVAL).start()
+PeriodicCompaction(COMPACTION_INTERVAL, replica_db).start()
+PeriodicCompaction(COMPACTION_INTERVAL, replica_historical_db).start()
+PeriodicViewCall(VIEW_CALL_INTERVAL, replica_db, 'tracker/api_active_hosts').start()
 
 @app.route('/')
 def index():
