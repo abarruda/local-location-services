@@ -1,4 +1,4 @@
 *.pyc
 backups
-tracker.log
+scanner.log
 *.bk
