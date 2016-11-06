@@ -1,4 +1,5 @@
 import sys
+import os
 from datetime import datetime, timedelta
 from time import sleep
 import couchdb
@@ -6,13 +7,28 @@ from couchdb import ResourceNotFound
 from Host import Host
 from Event import Event
 from ScanUtils import ScanUtils
+import ConfigParser
 
-couchdb_url = 'http://localhost:5984/'
-couchdb_name = 'test_tracker'
-historical_db_name = 'tracker_historical'
-HOST_IDLE_THRESHOLD_MINUTES = 15
-SCAN_HEARTBEAT_SECONDS = 30
-HOST_IDLE_FOR_PING_MINUTES = 5
+if len(sys.argv) < 2:
+  print "A property file must be specified to start scanner!"
+  sys.exit(1)
+
+configFile = sys.argv[1]
+if not os.path.isfile(configFile):
+  print "Property file does not exist, cannot start scanner!"
+  sys.exit(1)
+
+print "Using configuration file: " + configFile
+config = ConfigParser.ConfigParser()
+config.read(configFile)
+
+couchdb_url = config.get('database', 'COUCHDB_URL')
+couchdb_name = config.get('database', 'COUCHDB_SCANNER_NAME')
+historical_db_name = config.get('database', 'COUCHDB_SCANNER_HISTORICAL_NAME')
+HOST_IDLE_THRESHOLD_MINUTES = config.getint('scanner', 'HOST_IDLE_THRESHOLD_MINUTES')
+SCAN_HEARTBEAT_SECONDS = config.getint('scanner', 'SCAN_HEARTBEAT_SECONDS')
+HOST_IDLE_FOR_PING_MINUTES = config.getint('scanner', 'HOST_IDLE_FOR_PING_MINUTES')
+IP_SCAN_RANGE = config.get('scanner', 'IP_SCAN_RANGE')
 
 couch = couchdb.Server(couchdb_url)
 db = couch[couchdb_name]
@@ -27,7 +43,7 @@ def recordEvent(timestamp, hostId, status):
 while True:
   try:
     # perform network scan
-    detectedHosts = ScanUtils.scanNetwork("192.168.1.2-99")
+    detectedHosts = ScanUtils.scanNetwork(IP_SCAN_RANGE)
     # establish a timestamp that will be used for all updates for this scan
     scanTimestamp = datetime.now()
     # update existing tracked hosts last_seen or insert new record for each new host

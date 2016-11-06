@@ -1,1 +1,1 @@
-python scanner.py >> scanner.log &
+python scanner.py properties.ini >> scanner.log &
