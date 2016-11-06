@@ -1,22 +1,37 @@
+import sys, os
 from flask import Flask, jsonify, request
 from api_utils import crossdomain
 from datetime import datetime, timedelta
 import couchdb
 from periodic_tasks import PeriodicCompaction, PeriodicViewCall
+import ConfigParser
+
+if len(sys.argv) < 2:
+  print "A property file must be specified to start API!"
+  sys.exit(1)
+
+configFile = sys.argv[1]
+if not os.path.isfile(configFile):
+  print "Property file does not exist, cannot start API!"
+  sys.exit(1)
+
+print "Using configuration file: " + configFile
+config = ConfigParser.ConfigParser()
+config.read(configFile)
 
 # Utilize replica for fast processing of views,
 # but edits to the data must go to the master
-master_couchdb_url = 'http://loyola.abarruda.com:5985/'
-replica_couchdb_url = 'http://localhost:5984/'
-master_tracker_db = 'test_tracker'
-master_replica_db = 'tracker'
-tracker_historical_db = 'tracker_historical'
+master_couchdb_url = config.get('database', 'MASTER_DB_URL')
+master_hosts_db = config.get('database', 'MASTER_DB_NAME')
+replica_couchdb_url = config.get('database', 'REPLICA_DB_URL')
+replica_db_name = config.get('database', 'REPLICA_DB_NAME')
+historical_db_name = config.get('database', 'HISTORICAL_DB_NAME')
 
 replica_couch = couchdb.Server(replica_couchdb_url)
-replica_db = replica_couch[master_replica_db]
-replica_historical_db = replica_couch[tracker_historical_db]
+replica_db = replica_couch[replica_db_name]
+replica_historical_db = replica_couch[historical_db_name]
 master_couch = couchdb.Server(master_couchdb_url)
-master_db = master_couch[master_tracker_db]
+master_db = master_couch[master_hosts_db]
 
 TIME_FORMAT_V1 = '%Y-%m-%d %H:%M:%S'
 TIME_FORMAT_V2 = '%Y-%m-%dT%H:%M:%SZ'
@@ -33,24 +48,24 @@ PeriodicViewCall(VIEW_CALL_INTERVAL, replica_db, 'tracker/api_active_hosts').sta
 def index():
 	return "A-Net Tracker API"
 
-@app.route('/tracker/api/v1/all', methods=['GET'])
+@app.route('/hosts/api/v1/all', methods=['GET'])
 def get_all():
 	results = replica_db.view('_all_docs', include_docs=True)
 	return results
 
-@app.route('/tracker/api/v1/active', methods=['GET'])
+@app.route('/hosts/api/v1/active', methods=['GET'])
 @crossdomain(origin='*')
 def get_active_hosts():
 	view_results = replica_db.view('tracker/api_active_hosts')
 	return jsonify(rows = view_results.rows)
 
-@app.route('/tracker/api/v1/inactive', methods=['GET'])
+@app.route('/hosts/api/v1/inactive', methods=['GET'])
 @crossdomain(origin='*')
 def get_inactive_hosts():
 	view_results = replica_db.view('tracker/api_inactive_hosts')
 	return jsonify(rows = view_results.rows)
 
-@app.route('/tracker/api/v1/<id>/event-history/<int:hours>', methods=['GET'])
+@app.route('/hosts/api/v1/<id>/event-history/<int:hours>', methods=['GET'])
 @crossdomain(origin='*')
 def event_history(id, hours):
 	threshold = hours * 60 * 60
@@ -68,7 +83,7 @@ def event_history(id, hours):
 
 	return jsonify(rows = results_in_range)
 
-@app.route('/tracker/api/v2/<id>/event-history/<int:hours>', methods=['GET'])
+@app.route('/hosts/api/v2/<id>/event-history/<int:hours>', methods=['GET'])
 @crossdomain(origin='*')
 def event_history_from_tracker_historical_db(id, hours):
 	threshold = str(datetime.now() - timedelta(hours = hours))
@@ -80,7 +95,7 @@ def event_history_from_tracker_historical_db(id, hours):
 
 	return jsonify(rows = results_in_range)
 
-@app.route('/tracker/api/v1/<id>', methods=['POST'])
+@app.route('/hosts/api/v1/<id>', methods=['POST'])
 @crossdomain(origin='*')
 def update(id):
 	host = master_db[id]
@@ -90,5 +105,6 @@ def update(id):
 	print "Changed host (" + id + ") '" + old_host_name + "' to '" + request.form['name'] + "'" 
 	return 'SUCCESS'
 
+api_port = config.get('api', 'API_PORT')
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=10101, debug=True)
+	app.run(host='0.0.0.0', port=api_port, debug=True)
