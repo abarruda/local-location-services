@@ -75,7 +75,7 @@ while True:
         # if the host is ACTIVE, then it didn't come up in the nmap scan
         # perform a ping with last known IP.
         if trackedHost.isActive() and Host.isIdleFor(trackedHost, scanTimestamp, HOST_IDLE_FOR_PING_MINUTES):
-          response, message, pingTime = ScanUtils.pingAnVerifyMacAddress(trackedHost.ip_address, trackedHost._id)
+          response, message, pingTime = ScanUtils.pingAndVerifyMacAddress(trackedHost.ip_address, trackedHost._id)
           print trackedHost.identString() + " " + message + " (ping time: " + str(pingTime) + ")"
           if response:
             trackedHost.update(scanTimestamp, trackedHost.ip_address, trackedHost.vendor)

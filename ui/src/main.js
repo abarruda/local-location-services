@@ -13,8 +13,8 @@ var Enclosure = React.createClass({
 			<div className="container-fluid" ref="parentContainer">
 				<div className="row">
 					<div className="col-sm-4">
-						<HostList title="Active Hosts" apiBaseUrl={baseUrl} dataSourceUrl={baseUrl + "/tracker/api/v1/active"} pollInterval={POLL_INTERVAL}/>
-						<HostList title="Inactive Hosts" apiBaseUrl={baseUrl} dataSourceUrl={baseUrl + "/tracker/api/v1/inactive"} pollInterval={POLL_INTERVAL}/>
+						<HostList title="Active Hosts" apiBaseUrl={baseUrl} dataSourceUrl={baseUrl + "/hosts/api/v1/active"} pollInterval={POLL_INTERVAL}/>
+						<HostList title="Inactive Hosts" apiBaseUrl={baseUrl} dataSourceUrl={baseUrl + "/hosts/api/v1/inactive"} pollInterval={POLL_INTERVAL}/>
 					</div>
 				</div>
 			</div>
