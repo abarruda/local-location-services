@@ -17,7 +17,7 @@ var Host = React.createClass({
     },
 
     loadTimelineFromServer: function() {
-        var apiUrl = this.props.apiBaseUrl + "/tracker/api/v2/" + this.props.host.id + "/event-history/36";
+        var apiUrl = this.props.apiEndpoint + "/hosts/api/v2/" + this.props.host.id + "/event-history/36";
         
         $.ajax({
             url: apiUrl,
@@ -75,7 +75,7 @@ var Host = React.createClass({
                     visible={this.state.updateModalVisible} 
                     onClose={this.handleUpdateModalClose} 
                     host={this.props.host}
-                    apiBaseUrl={this.props.apiBaseUrl}/>
+                    apiEndpoint={this.props.apiEndpoint}/>
                 <Panel header={this.props.host.name} collapsible bsStyle={this.props.style}>
                     {lastEvent}<br />
                     <br />

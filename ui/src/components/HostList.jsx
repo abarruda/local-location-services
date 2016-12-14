@@ -56,7 +56,7 @@ var HostList = React.createClass({
                 style = "info";
             }
             return (
-                <Host apiBaseUrl={self.props.apiBaseUrl} key={host.id} host={host} style={style}/>
+                <Host apiEndpoint={self.props.apiEndpoint} key={host.id} host={host} style={style}/>
                 );
         });
 

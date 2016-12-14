@@ -16,7 +16,7 @@ var UpdateHostModal = React.createClass({
     },
 
     updateHost: function () {
-        var apiUrl = this.props.apiBaseUrl + "/tracker/api/v1/" + this.props.host.id;
+        var apiUrl = this.props.apiEndpoint + "/hosts/api/v1/" + this.props.host.id;
 
         $.ajax({
             url: apiUrl,

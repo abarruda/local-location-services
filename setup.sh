@@ -25,3 +25,7 @@ sudo mv nmap-mac-prefixes /usr/share/nmap/nmap-mac-prefixes
 #	-H "Content-Type: application/json" \
 #    -X POST -d "{'_id':'loyolaToProduction_tracker', 'source':'<local network db>/test_tracker', 'target': 'tracker', 'create_target': true, 'continuous': true, 'user_ctx': {'roles': ['_admin']}' \
 #    http://localhost:5984/_replicator
+
+
+# copy config/globalConfigs.template to config/globalConfigs.js and fill in appropriate values
+
