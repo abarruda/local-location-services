@@ -31,8 +31,15 @@ HOST_IDLE_FOR_PING_MINUTES = config.getint('scanner', 'HOST_IDLE_FOR_PING_MINUTE
 IP_SCAN_RANGE = config.get('scanner', 'IP_SCAN_RANGE')
 
 couch = couchdb.Server(couchdb_url)
-db = couch[couchdb_name]
-historical_db = couch[historical_db_name]
+try:
+  db = couch[couchdb_name]
+except couchdb.http.ResourceNotFound:
+  db = couch.create(couchdb_name)
+
+try:
+  historical_db = couch[historical_db_name]
+except couchdb.http.ResourceNotFound:
+  historical_db = couch.create(historical_db_name)
 
 def recordEvent(timestamp, hostId, status):
   print "**** Recording event: " + str(timestamp) + " " + str(hostId) + " " + str(status)
