@@ -42,7 +42,7 @@ VIEW_CALL_INTERVAL = 86400 #24 hours
 app = Flask(__name__)
 PeriodicCompaction(COMPACTION_INTERVAL, replica_db).start()
 PeriodicCompaction(COMPACTION_INTERVAL, replica_historical_db).start()
-PeriodicViewCall(VIEW_CALL_INTERVAL, replica_db, 'tracker/api_active_hosts').start()
+PeriodicViewCall(VIEW_CALL_INTERVAL, replica_db, 'local_location_services/api_active_hosts').start()
 
 @app.route('/')
 def index():
@@ -56,13 +56,13 @@ def get_all():
 @app.route('/hosts/api/v1/active', methods=['GET'])
 @crossdomain(origin='*')
 def get_active_hosts():
-	view_results = replica_db.view('tracker/api_active_hosts')
+	view_results = replica_db.view('local_location_services/api_active_hosts')
 	return jsonify(rows = view_results.rows)
 
 @app.route('/hosts/api/v1/inactive', methods=['GET'])
 @crossdomain(origin='*')
 def get_inactive_hosts():
-	view_results = replica_db.view('tracker/api_inactive_hosts')
+	view_results = replica_db.view('local_location_services/api_inactive_hosts')
 	return jsonify(rows = view_results.rows)
 
 @app.route('/hosts/api/v1/<id>/event-history/<int:hours>', methods=['GET'])
@@ -88,7 +88,7 @@ def event_history(id, hours):
 def event_history_from_tracker_historical_db(id, hours):
 	threshold = str(datetime.now() - timedelta(hours = hours))
 	results_in_range = []
-	view_results = replica_historical_db.view('tracker/search_by_id_sort_by_timestamp', startkey=[id, threshold], endkey=[id, {}])
+	view_results = replica_historical_db.view('local_location_services/search_by_id_sort_by_timestamp', startkey=[id, threshold], endkey=[id, {}])
 	for result in view_results:
 		pretty_timestamp = datetime.strptime(result.value['timestamp'], TIME_FORMAT_V2).strftime(PRETTY_TIME_FORMAT)
 		results_in_range.append({'timestamp': pretty_timestamp, 'status': result.value['status']})
