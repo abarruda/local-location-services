@@ -74,4 +74,4 @@ gulp.task('watch', function() {
 	gulp.watch(config.paths.jsx, ['js', 'lint'])
 });
 
-gulp.task('default', ['html', 'js', 'css', 'lint', 'open', 'watch']);
+gulp.task('default', ['html', 'js', 'css', 'lint']);

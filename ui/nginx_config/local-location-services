@@ -1,0 +1,11 @@
+server {
+  listen 80;
+  location / {
+    root /local-location-services/dist/;
+    index index.html;
+  }
+
+  location /hosts/api {
+    proxy_pass http://api;
+  }
+}
