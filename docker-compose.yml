@@ -1,0 +1,30 @@
+version: '2'
+
+services:
+  couchdb:
+    container_name: couchdb
+    build: ./couchdb
+    ports: 
+      - "5984:5984"
+
+  scanner:
+    container_name: scanner
+    build: ./scanner
+    depends_on:
+      - couchdb
+    privileged: true
+    network_mode: host
+
+  api:
+    container_name: api
+    build: ./api
+    depends_on:
+      - couchdb
+
+  web:
+    container_name: web
+    build: ./ui
+    depends_on:
+      - api
+    ports:
+      - "80:80"
