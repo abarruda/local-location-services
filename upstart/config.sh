@@ -1,5 +1,5 @@
-rm /etc/init/tracker_api.conf
-rm /etc/init.d/tracker_api
+rm /etc/init/local_location_services_api.conf
+rm /etc/init.d/local_location_services_api
 
-cp tracker_api.conf /etc/init/.
-ln -s /etc/init/tracker_api.conf /etc/init.d/tracker_api
+cp local_location_services_api.conf /etc/init/.
+ln -s /etc/init/local_location_services_api.conf /etc/init.d/local_location_services_api

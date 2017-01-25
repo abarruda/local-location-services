@@ -1,4 +1,4 @@
-# Class representing an Event that is detected by the tracker
+# Class representing an Event that is detected by the scanner. 
 
 from couchdb.mapping import Mapping, Document, TextField, DateTimeField
 

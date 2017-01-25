@@ -85,10 +85,10 @@ def event_history(id, hours):
 
 @app.route('/hosts/api/v2/<id>/event-history/<int:hours>', methods=['GET'])
 @crossdomain(origin='*')
-def event_history_from_tracker_historical_db(id, hours):
+def event_history_from_replica_database(id, hours):
 	threshold = str(datetime.now() - timedelta(hours = hours))
 	results_in_range = []
-	view_results = replica_historical_db.view('local_location_services/search_by_id_sort_by_timestamp', startkey=[id, threshold], endkey=[id, {}])
+	view_results = replica_historical_db.view('local_location_services_historical/search_by_id_sort_by_timestamp', startkey=[id, threshold], endkey=[id, {}])
 	for result in view_results:
 		pretty_timestamp = datetime.strptime(result.value['timestamp'], TIME_FORMAT_V2).strftime(PRETTY_TIME_FORMAT)
 		results_in_range.append({'timestamp': pretty_timestamp, 'status': result.value['status']})

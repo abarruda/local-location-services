@@ -75,7 +75,7 @@ while True:
 
     # iterate over all currently tracked hosts
     for id in db:
-      # ignore design documents ("_design/tracker") and hosts we just detected
+      # ignore design documents ("_design/local_location_services") and hosts we just detected
       if (id[0] != "_") and (id not in detectedHosts):
         trackedHost = Host.load(db, id)
 

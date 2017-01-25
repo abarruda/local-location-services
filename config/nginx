@@ -6,9 +6,9 @@
 
 server {
   listen 80;
-  server_name tracker.abarruda.com www.tracker.abarruda.com;
+  server_name local-location-services.com;
   location / {
-    root /tracker/ui/dist;
+    root /local_location_services/ui/dist;
     index index.html;
   }
 }
@@ -27,7 +27,7 @@ server {
 ##
 
 # The following configuration will direct traffic NOT coming from the server
-# specified above (i.e. tracker-api.abarruda.com vs tracker.abarruda.com)
+# specified above (i.e. local-location-services.com)
 # to be routed to a 444 instead of any content.
 
 server {

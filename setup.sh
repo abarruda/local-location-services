@@ -23,7 +23,7 @@ sudo mv nmap-mac-prefixes /usr/share/nmap/nmap-mac-prefixes
 # the following command sets up replication from the source database (local network) to the database production APIs use.
 #curl -i \
 #	-H "Content-Type: application/json" \
-#    -X POST -d "{'_id':'loyolaToProduction_tracker', 'source':'<local network db>/test_tracker', 'target': 'tracker', 'create_target': true, 'continuous': true, 'user_ctx': {'roles': ['_admin']}' \
+#    -X POST -d "{'_id':'local_location_services_homeToProduction', 'source':'<local network db>/local_location_services', 'target': 'local_location_services', 'create_target': true, 'continuous': true, 'user_ctx': {'roles': ['_admin']}' \
 #    http://localhost:5984/_replicator
 
 
