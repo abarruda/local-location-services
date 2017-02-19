@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install python-libnmap couchdb
 
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 COPY *.py /scanner/
 COPY properties.ini /scanner/
 

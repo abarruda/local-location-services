@@ -8,6 +8,7 @@ from Host import Host
 from Event import Event
 from ScanUtils import ScanUtils
 import ConfigParser
+import traceback
 
 if len(sys.argv) < 2:
   print "A property file must be specified to start scanner!"
@@ -52,7 +53,7 @@ while True:
     # perform network scan
     detectedHosts = ScanUtils.scanNetwork(IP_SCAN_RANGE)
     # establish a timestamp that will be used for all updates for this scan
-    scanTimestamp = datetime.now()
+    scanTimestamp = datetime.now().replace(microsecond=0)
     # update existing tracked hosts last_seen or insert new record for each new host
     for key, host in detectedHosts.items():
       hostRecord = host.load(db, key)
@@ -111,6 +112,7 @@ while True:
     print ""
   except:
     print "Unexpected error:", sys.exc_info()
+    traceback.print_exception(*sys.exc_info())
 
   sys.stdout.flush()
   sleep(SCAN_HEARTBEAT_SECONDS)

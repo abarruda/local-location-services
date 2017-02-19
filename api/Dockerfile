@@ -6,6 +6,9 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install couchdb flask tornado
 
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 COPY *.py /api/
 COPY properties.ini /api/
 
