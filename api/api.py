@@ -56,13 +56,14 @@ def get_all():
 @app.route('/hosts/api/v1/active', methods=['GET'])
 @crossdomain(origin='*')
 def get_active_hosts():
-	view_results = replica_db.view('local_location_services/api_active_hosts')
+	view_results = replica_db.view('local_location_services/api_active_hosts', descending=True)
+	print view_results.rows
 	return jsonify(rows = view_results.rows)
 
 @app.route('/hosts/api/v1/inactive', methods=['GET'])
 @crossdomain(origin='*')
 def get_inactive_hosts():
-	view_results = replica_db.view('local_location_services/api_inactive_hosts')
+	view_results = replica_db.view('local_location_services/api_inactive_hosts', descending=True)
 	return jsonify(rows = view_results.rows)
 
 @app.route('/hosts/api/v1/<id>/event-history/<int:hours>', methods=['GET'])
