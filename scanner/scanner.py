@@ -6,7 +6,7 @@ import couchdb
 from couchdb import ResourceNotFound
 from Host import Host
 from Event import Event
-from ScanUtils import ScanUtils
+#from ScanUtils import ScanUtils
 import ConfigParser
 import traceback
 
@@ -29,7 +29,17 @@ historical_db_name = config.get('database', 'COUCHDB_SCANNER_HISTORICAL_NAME')
 HOST_IDLE_THRESHOLD_MINUTES = config.getint('scanner', 'HOST_IDLE_THRESHOLD_MINUTES')
 SCAN_HEARTBEAT_SECONDS = config.getint('scanner', 'SCAN_HEARTBEAT_SECONDS')
 HOST_IDLE_FOR_PING_MINUTES = config.getint('scanner', 'HOST_IDLE_FOR_PING_MINUTES')
-IP_SCAN_RANGE = config.get('scanner', 'IP_SCAN_RANGE')
+SCAN_TYPE = config.get('scanner', 'SCANNER_TYPE')
+
+if SCAN_TYPE == 'nmap':
+  print("Scanner type: NMAP")
+  from NmapScanUtils import NmapScanUtils
+  scannerUtils = NmapScanUtils(config=config)
+
+elif SCAN_TYPE == 'snmp':
+  print("Scanner type: SNMP")
+  from SnmpScanUtils import SnmpScanUtils
+  scannerUtils = SnmpScanUtils(config=config)
 
 couch = couchdb.Server(couchdb_url)
 try:
@@ -51,7 +61,11 @@ def recordEvent(timestamp, hostId, status):
 while True:
   try:
     # perform network scan
-    detectedHosts = ScanUtils.scanNetwork(IP_SCAN_RANGE)
+    scanStart = datetime.now()
+    detectedHosts = scannerUtils.scanNetwork()
+    scanTime = datetime.now() - scanStart
+    print "Number of hosts detected: " + str(len(detectedHosts)) + " (scan time: " + str(scanTime) + ")"
+
     # establish a timestamp that will be used for all updates for this scan
     scanTimestamp = datetime.now().replace(microsecond=0)
     # update existing tracked hosts last_seen or insert new record for each new host
@@ -83,7 +97,7 @@ while True:
         # if the host is ACTIVE, then it didn't come up in the nmap scan
         # perform a ping with last known IP.
         if trackedHost.isActive() and Host.isIdleFor(trackedHost, scanTimestamp, HOST_IDLE_FOR_PING_MINUTES):
-          response, message, pingTime = ScanUtils.pingAndVerifyMacAddress(trackedHost.ip_address, trackedHost._id)
+          response, message, pingTime = scannerUtils.pingAndVerifyMacAddress(trackedHost.ip_address, trackedHost._id)
           print trackedHost.identString() + " " + message + " (ping time: " + str(pingTime) + ")"
           if response:
             trackedHost.update(scanTimestamp, trackedHost.ip_address, trackedHost.vendor)

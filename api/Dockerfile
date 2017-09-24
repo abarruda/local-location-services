@@ -15,4 +15,3 @@ COPY properties.ini /api/
 EXPOSE 80
 
 CMD sleep 2 && python /api/ApiServer.py /api/properties.ini
-
