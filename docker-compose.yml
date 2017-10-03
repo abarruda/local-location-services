@@ -2,16 +2,16 @@ version: '2'
 
 services:
   couchdb:
-    container_name: couchdb
+    container_name: lls-couchdb
     build: ./couchdb
     ports: 
-      - "5984:5984"
+      - "59084:5984"
     volumes:
-      - couchdb_data:/data
+      - lls-data:/data
     restart: unless-stopped
 
   scanner:
-    container_name: scanner
+    container_name: lls-scanner
     build: ./scanner
     depends_on:
       - couchdb
@@ -20,20 +20,20 @@ services:
     restart: unless-stopped
 
   api:
-    container_name: api
+    container_name: lls-api
     build: ./api
     depends_on:
       - couchdb
     restart: unless-stopped
 
   web:
-    container_name: web
+    container_name: lls-web
     build: ./ui
     depends_on:
       - api
     ports:
-      - "80:80"
+      - "8080:80"
     restart: unless-stopped
 
 volumes:
-  couchdb_data:
+  lls-data:
