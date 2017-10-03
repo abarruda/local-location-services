@@ -6,6 +6,9 @@ services:
     build: ./couchdb
     ports: 
       - "5984:5984"
+    volumes:
+      - couchdb_data:/data
+    restart: unless-stopped
 
   scanner:
     container_name: scanner
@@ -14,12 +17,14 @@ services:
       - couchdb
     privileged: true
     network_mode: host
+    restart: unless-stopped
 
   api:
     container_name: api
     build: ./api
     depends_on:
       - couchdb
+    restart: unless-stopped
 
   web:
     container_name: web
@@ -28,3 +33,7 @@ services:
       - api
     ports:
       - "80:80"
+    restart: unless-stopped
+
+volumes:
+  couchdb_data:
