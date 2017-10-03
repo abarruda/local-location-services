@@ -57,7 +57,6 @@ def get_all():
 @crossdomain(origin='*')
 def get_active_hosts():
 	view_results = replica_db.view('local_location_services/api_active_hosts', descending=True)
-	print view_results.rows
 	return jsonify(rows = view_results.rows)
 
 @app.route('/hosts/api/v1/inactive', methods=['GET'])
