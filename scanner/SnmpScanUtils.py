@@ -29,7 +29,11 @@ class SnmpScanUtils(ScanUtils):
 			ip = str.replace(str(item.oid), self.oid, '')
 			mac = ':'.join([ '%0.2x' % ord(_) for _ in item.value ]).upper()
 			vendor = self.macParser.get_comment(mac)
-			host = Host(_id=mac, ip_address=ip, vendor=vendor)
+			if vendor is not None:
+				vendorString = vendor
+			else:
+				vendorString = "<Unknown>"
+			host = Host(_id=mac, ip_address=ip, vendor=vendorString)
 			detectedHosts[host._id] = host
 			numHosts += 1
 
