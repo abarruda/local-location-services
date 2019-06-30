@@ -1,15 +1,20 @@
 from ScanUtils import ScanUtils
-
 from easysnmp import Session
 from manuf import manuf
 from Host import Host
+
+import os
+
 
 class SnmpScanUtils(ScanUtils):
 
 	def __init__(self, config):
 		self.config = config
-		self.oid = config.get('snmp', 'OID')
-		self.host = config.get('snmp', 'HOST')
+		self.host = os.getenv("SNMP_HOST", config.get('snmp', 'HOST'))
+		print "SNMP host: " + self.host
+		self.oid = os.getenv("SNMP_OID", config.get('snmp', 'OID'))
+		print "SNMP OID: " + self.oid
+		
 		# The following is necessary because the manuf project is currently broken.
 		# It assumes that the manuf file uses a '#' preceeding the vendor comment
 		# on each line.  However the file retrieved via the update does not preceed

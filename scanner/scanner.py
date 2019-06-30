@@ -23,7 +23,11 @@ print "Using configuration file: " + configFile
 config = ConfigParser.ConfigParser()
 config.read(configFile)
 
-couchdb_url = config.get('database', 'COUCHDB_URL')
+couchdb_host = os.getenv("COUCHDB_HOST", config.get('database', 'COUCHDB_HOST'))
+couchdb_port = os.getenv("COUCHDB_PORT", config.get('database', 'COUCHDB_PORT'))
+couchdb_url = "http://" + couchdb_host + ":" + couchdb_port
+print "Connecting to couchdb @ '" + couchdb_url + "'"
+
 couchdb_name = config.get('database', 'COUCHDB_SCANNER_NAME')
 historical_db_name = config.get('database', 'COUCHDB_SCANNER_HISTORICAL_NAME')
 HOST_IDLE_THRESHOLD_MINUTES = config.getint('scanner', 'HOST_IDLE_THRESHOLD_MINUTES')
