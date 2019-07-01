@@ -21,9 +21,16 @@ config.read(configFile)
 
 # Utilize replica for fast processing of views,
 # but edits to the data must go to the master
-master_couchdb_url = config.get('database', 'MASTER_DB_URL')
+master_couchdb_host = os.getenv("COUCHDB_HOST", config.get('database', 'MASTER_DB_HOST'))
+master_couchdb_port = os.getenv("COUCHDB_PORT", config.get('database', 'MASTER_DB_PORT'))
+master_couchdb_url = "http://" + master_couchdb_host + ":" + master_couchdb_port
+print "Connecting to master couchdb @ '" + master_couchdb_url + "'"
 master_hosts_db = config.get('database', 'MASTER_DB_NAME')
-replica_couchdb_url = config.get('database', 'REPLICA_DB_URL')
+
+replica_couchdb_host = os.getenv("COUCHDB_HOST", config.get('database', 'REPLICA_DB_HOST'))
+replica_couchdb_port = os.getenv("COUCHDB_PORT", config.get('database', 'REPLICA_DB_PORT'))
+replica_couchdb_url = "http://" + replica_couchdb_host + ":" + replica_couchdb_port
+print "Connecting to replica couchdb @ '" + replica_couchdb_url + "'"
 replica_db_name = config.get('database', 'REPLICA_DB_NAME')
 historical_db_name = config.get('database', 'HISTORICAL_DB_NAME')
 
