@@ -1,8 +1,12 @@
 FROM resin/rpi-raspbian:jessie
 
 RUN apt-get update && apt-get install -y \
-  python \
-  python-pip
+  wget \
+  python
+
+# https://stackoverflow.com/a/37531821
+RUN wget https://bootstrap.pypa.io/get-pip.py
+RUN python get-pip.py
 
 RUN pip install couchdb flask tornado
 
