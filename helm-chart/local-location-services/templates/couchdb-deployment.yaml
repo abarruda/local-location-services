@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-couchdb
+  labels:
+    app: {{ .Chart.Name }}-couchdb
+
+spec:
+  
+  replicas: {{ .Values.replicaCount }}
+  
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-couchdb
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-couchdb
+        app.kubernetes.io/instance: {{ .Release.Name }}
+
+    spec:
+    {{- with .Values.couchdb.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+      volumes:
+        - name: {{ .Chart.Name }}{{ .Values.couchdb.volume.name }}
+          flexVolume: 
+            driver: "fstab/cifs"
+            fsType: "cifs"
+            secretRef:
+              name: "couchdb-network-storage-cifs-secret"
+            options:
+              networkPath: "//{{ .Values.couchdb.volume.server }}{{ .Values.couchdb.volume.path }}"
+              mountOptions: "{{ .Values.couchdb.volume.mountOptions}}"
+
+      containers:
+        - name: {{ .Chart.Name }}-couchdb
+          image: "{{ .Values.couchdb.image.repository }}:{{ .Values.couchdb.image.tag }}"
+          imagePullPolicy: {{ .Values.couchdb.image.pullPolicy }}
+
+          ports:
+            - name: couchdb-port
+              containerPort: {{ .Values.couchdb.container.couchdbPort }}
+              protocol: {{ .Values.couchdb.container.couchdbProtocol }}
+
+          volumeMounts:
+            - name: {{ .Chart.Name }}{{ .Values.couchdb.volume.name }}
+              mountPath: /data
+          
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

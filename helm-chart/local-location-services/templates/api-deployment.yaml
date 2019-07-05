@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-api
+  labels:
+    app: {{ .Chart.Name }}-api
+
+spec:
+  
+  replicas: {{ .Values.replicaCount }}
+  
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-api
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-api
+        app.kubernetes.io/instance: {{ .Release.Name }}
+
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+      containers:
+        - name: {{ .Chart.Name }}-api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          env:
+            - name: COUCHDB_HOST
+              value: {{.Values.api.container.couchdbHost}}
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

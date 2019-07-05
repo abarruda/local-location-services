@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-location-services-ui-nginx-config
+data:
+  nginx-conf: |
+    server {
+      listen 80;
+      location / {
+        root /local-location-services/dist/;
+        index index.html;
+      }
+
+      location /hosts/api {
+        proxy_pass http://{{ .Values.ui.nginx.apiEndpoint }};
+      }
+    }

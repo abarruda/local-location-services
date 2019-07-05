@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-scanner
+  labels:
+    app: {{ .Chart.Name }}-scanner
+
+spec:
+  
+  replicas: {{ .Values.replicaCount }}
+  
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-scanner
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-scanner
+        app.kubernetes.io/instance: {{ .Release.Name }}
+
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+
+      containers:
+        - name: {{ .Chart.Name }}-scanner
+          image: "{{ .Values.scanner.image.repository }}:{{ .Values.scanner.image.tag }}"
+          imagePullPolicy: {{ .Values.scanner.image.pullPolicy }}
+          env:
+            - name: COUCHDB_HOST
+              value: {{.Values.scanner.container.couchdbHost}}
+            - name: SNMP_HOST
+              value: {{.Values.scanner.container.snmpHost}}
+            - name: SNMP_OID
+              value: {{.Values.scanner.container.snmpOid}}
+          securityContext:
+            privileged: true
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
