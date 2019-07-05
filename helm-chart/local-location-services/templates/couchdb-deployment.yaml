@@ -32,7 +32,7 @@ spec:
             driver: "fstab/cifs"
             fsType: "cifs"
             secretRef:
-              name: "couchdb-network-storage-cifs-secret"
+              name: "{{ .Values.secrets.dataVolumeServerSecretName }}"
             options:
               networkPath: "//{{ .Values.couchdb.volume.server }}{{ .Values.couchdb.volume.path }}"
               mountOptions: "{{ .Values.couchdb.volume.mountOptions}}"

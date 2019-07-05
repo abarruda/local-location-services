@@ -15,7 +15,6 @@ couchdb:
     server: 
     path: "/storage/local-location-services/couchdb"
     mountOptions: "vers=1.0"
-    serverSecretName: "couchdb-network-storage-cifs-secret"
 
   container:
     couchdbPort: 5984
@@ -51,6 +50,9 @@ ui:
 
   nginx:
     apiEndpoint: local-location-services-api
+
+secrets:
+  dataVolumeServerSecretName: "local-location-services-couchdb-network-storage-cifs-secret"
 
 
 imagePullSecrets: []
