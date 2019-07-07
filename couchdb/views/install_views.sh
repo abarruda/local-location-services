@@ -1,4 +1,4 @@
-couchdb -b
+su couchdb -c 'couchdb -b'
 # give the database a change to start
 while ! nc -vz localhost 5984; do sleep 1; done
 echo "Creating databases..."
@@ -11,5 +11,4 @@ curl -X PUT -d @/views/local_location_services_historical_views.js 'http://local
 # without the sleep, views weren't persisting to the db.  Perhaps not enough time to commit to disk?
 sleep 5
 tail -n500 /var/log/couchdb/couch.log
-#service couchdb stop
-couchdb -d
+su couchdb -c 'couchdb -d'
