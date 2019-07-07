@@ -23,6 +23,6 @@ COPY views/ /views/
 RUN /bin/sh /views/install_views.sh
 
 # update to use supervisor
-CMD su couchdb -c couchdb
-
+#CMD su couchdb -c couchdb
+CMD couchdb
 VOLUME /data
