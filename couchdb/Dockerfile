@@ -2,7 +2,9 @@ FROM resin/rpi-raspbian:jessie
 
 RUN apt-get update && apt-get install -y \
     couchdb \
-    logrotate 
+    logrotate \
+    curl \
+    netcat 
 
 RUN mkdir /var/run/couchdb
 RUN chown -R couchdb:couchdb /var/run/couchdb
