@@ -14,13 +14,14 @@ couchdb:
     name: "-couchdb-data"
     server: 
     path: "/storage/local-location-services/couchdb"
-    mountOptions: "vers=1.0"
+    mountOptions: "vers=1.0,dir_mode=0755,file_mode=0644,noperm"
 
   container:
     couchdbPort: 5984
     couchdbProtocol: TCP
 
 scanner:
+  replicaCount: 1
   image:
     repository: local-location-services-scanner
     tag: latest
@@ -31,6 +32,7 @@ scanner:
     snmpOid: "iso.3.6.1.2.1.3.1.1.2.0.1."
 
 api:
+  replicaCount: 1
   image:
     repository: local-location-services-api
     tag: latest
@@ -40,6 +42,7 @@ api:
     apiPort: 80
 
 ui:
+  replicaCount: 1
   image:
     repository: local-location-services-ui
     tag: latest
