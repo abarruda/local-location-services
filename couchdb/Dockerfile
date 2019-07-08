@@ -19,10 +19,11 @@ RUN chown -R couchdb:couchdb /etc/couchdb
 RUN touch couchdb.stdout && chown couchdb:couchdb couchdb.stdout
 RUN touch couchdb.stderr && chown couchdb:couchdb couchdb.stderr
 
+VOLUME /data
+
+COPY create_dbs.sh .
 COPY views/ /views/
-RUN /bin/sh /views/install_views.sh
+COPY entrypoint.sh .
 
 # update to use supervisor
-#CMD su couchdb -c couchdb
-CMD couchdb
-VOLUME /data
+CMD sh entrypoint.sh
