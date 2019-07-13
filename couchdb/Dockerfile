@@ -3,6 +3,7 @@ FROM resin/rpi-raspbian:jessie
 RUN apt-get update && apt-get install -y \
     couchdb \
     logrotate \
+    rsyslog \
     curl \
     netcat 
 
@@ -21,6 +22,7 @@ RUN touch couchdb.stderr && chown couchdb:couchdb couchdb.stderr
 
 VOLUME /data
 
+COPY logrotate.conf /etc/logrotate.d/couchdb
 COPY create_dbs.sh .
 COPY views/ /views/
 COPY entrypoint.sh .
