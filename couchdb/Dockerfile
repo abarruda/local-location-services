@@ -2,6 +2,7 @@ FROM resin/rpi-raspbian:jessie
 
 RUN apt-get update && apt-get install -y \
     couchdb \
+    netcat \
     logrotate \
     rsyslog 
 
@@ -22,11 +23,10 @@ VOLUME /data
 
 COPY create_dbs.sh .
 COPY views/ /views/
-COPY entrypoint.sh .
 
 COPY logrotate.conf /etc/logrotate.d/couchdb
 RUN logrotate -f /etc/logrotate.d/couchdb
-RUN service cron start
 
 # update to use supervisor
+COPY entrypoint.sh .
 CMD sh entrypoint.sh

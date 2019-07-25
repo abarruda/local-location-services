@@ -1,3 +1,5 @@
+service cron start
+
 chown -R couchdb:couchdb /data
 
 su couchdb -c 'couchdb -b'
