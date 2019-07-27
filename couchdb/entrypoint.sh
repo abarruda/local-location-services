@@ -1,5 +1,7 @@
 service cron start
 
+rsyslogd
+
 chown -R couchdb:couchdb /data
 
 su couchdb -c 'couchdb -b'
