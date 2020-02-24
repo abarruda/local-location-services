@@ -3,6 +3,7 @@
 # Declare variables to be passed into your templates.
 
 couchdb:
+  replicaCount: 1
   image:
     repository: local-location-services-couchdb
     tag: latest
@@ -10,9 +11,7 @@ couchdb:
 
   volume:
     name: "-couchdb-data"
-    server: 
-    path: "/storage/local-location-services/couchdb"
-    mountOptions: "vers=1.0,dir_mode=0755,file_mode=0644,noperm"
+    size: 5Gi
 
   container:
     couchdbPort: 5984

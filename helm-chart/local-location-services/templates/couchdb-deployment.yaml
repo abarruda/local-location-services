@@ -7,7 +7,7 @@ metadata:
 
 spec:
   
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.couchdb.replicaCount }}
   
   selector:
     matchLabels:
@@ -28,14 +28,8 @@ spec:
 
       volumes:
         - name: {{ .Chart.Name }}{{ .Values.couchdb.volume.name }}
-          flexVolume: 
-            driver: "fstab/cifs"
-            fsType: "cifs"
-            secretRef:
-              name: "{{ .Values.secrets.dataVolumeServerSecretName }}"
-            options:
-              networkPath: "//{{ .Values.couchdb.volume.server }}{{ .Values.couchdb.volume.path }}"
-              mountOptions: "{{ .Values.couchdb.volume.mountOptions}}"
+          persistentVolumeClaim:
+            claimName: {{ .Chart.Name }}{{ .Values.couchdb.volume.name }}-pvclaim
 
       containers:
         - name: {{ .Chart.Name }}-couchdb
